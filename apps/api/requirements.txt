@@ -1,0 +1,24 @@
+# RazorGrowth AI API — Python Dependencies
+# Install: pip install -r requirements.txt
+
+# Web framework
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.34,<1.0
+
+# Database
+sqlalchemy>=2.0,<3.0
+asyncpg>=0.30,<1.0
+alembic>=1.15,<2.0
+
+# Validation / settings
+pydantic>=2.0,<3.0
+pydantic-settings>=2.7,<3.0
+
+# Cache
+redis>=5.2,<6.0
+
+# Authentication
+python-jose[cryptography]>=3.3,<4.0
+passlib[bcrypt]>=1.7,<2.0
+bcrypt>=4.0,<5.0
+python-multipart>=0.0.9
