@@ -9,6 +9,8 @@ from app.api.middleware.error_handler import (
 )
 from app.api.middleware.request_id import RequestIDMiddleware
 from app.api.routes.auth import router as auth_router
+from app.api.routes.categories import router as categories_router
+from app.api.routes.products import router as products_router
 from app.api.routes.tenants import router as tenant_router
 from app.api.routes.users import router as users_router
 from app.core.exceptions import RazorGrowthError
@@ -43,6 +45,8 @@ app.add_exception_handler(Exception, unhandled_error_handler)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(users_router, prefix="/api/v1")
 app.include_router(tenant_router, prefix="/api/v1")
+app.include_router(categories_router, prefix="/api/v1")
+app.include_router(products_router, prefix="/api/v1")
 
 
 # --- Health Check ---

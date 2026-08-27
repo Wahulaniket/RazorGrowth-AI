@@ -11,9 +11,10 @@ from fastapi import Depends, Header
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import InvalidTokenError
+from app.core.exceptions import ForbiddenError, InvalidTokenError, TenantAccessDeniedError
 from app.core.security import decode_access_token
 from app.db.session import get_db
+from app.models.tenant import Tenant
 from app.models.user import User
 from app.repositories.user import UserRepository
 
@@ -56,3 +57,34 @@ async def get_current_user(
         raise InvalidTokenError(message="User account is not active.")
 
     return user
+
+
+async def get_current_tenant(
+    current_user: User = Depends(get_current_user),
+    x_tenant_id: str | None = Header(default=None, alias="X-Tenant-ID"),
+    db: AsyncSession = Depends(get_db),
+) -> Tenant:
+    """Validate the user has membership for the requested tenant.
+
+    Extracts tenant ID from X-Tenant-ID header and checks that the
+    authenticated user has a TenantMembership for that tenant.
+
+    Raises:
+        ForbiddenError: If the X-Tenant-ID header is missing.
+        TenantAccessDeniedError: If the user has no membership for the tenant.
+    """
+    if not x_tenant_id:
+        raise ForbiddenError(message="X-Tenant-ID header is required.")
+
+    try:
+        tenant_uuid = UUID(x_tenant_id)
+    except ValueError:
+        raise ForbiddenError(message="Invalid tenant ID format.")
+
+    # Check user's memberships (already loaded via selectin)
+    for membership in current_user.memberships:
+        if membership.tenant_id == tenant_uuid:
+            return membership.tenant
+
+    raise TenantAccessDeniedError()
+
