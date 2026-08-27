@@ -16,9 +16,11 @@ from app.api.routes.products import router as products_router
 from app.api.routes.tenants import router as tenant_router
 from app.api.routes.users import router as users_router
 from app.api.routes.api_keys import router as api_keys_router
+from app.api.routes.catalog import router as catalog_router
 from app.core.exceptions import RazorGrowthError
 from app.db.session import get_db
 from app.core.config import get_settings
+from fastapi import APIRouter
 
 settings = get_settings()
 
@@ -67,12 +69,16 @@ app.add_exception_handler(Exception, unhandled_error_handler)
 
 # --- Routers ---
 
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(users_router, prefix="/api/v1")
-app.include_router(tenant_router, prefix="/api/v1")
+api_router = APIRouter()
+api_router.include_router(auth_router)
+api_router.include_router(users_router)
+api_router.include_router(tenant_router)
+api_router.include_router(api_keys_router)
+api_router.include_router(catalog_router)
+
+app.include_router(api_router, prefix="/api/v1")
 app.include_router(categories_router, prefix="/api/v1")
 app.include_router(products_router, prefix="/api/v1")
-app.include_router(api_keys_router, prefix="/api/v1")
 
 
 # --- Health Check ---
