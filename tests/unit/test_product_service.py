@@ -16,13 +16,13 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture
-async def category(db_session, tenant):
+async def category(db, tenant):
     return await CategoryService.create(
-        db_session, tenant.id, CategoryCreate(name="Test Cat", slug="test-cat")
+        db, tenant.id, CategoryCreate(name="Test Cat", slug="test-cat")
     )
 
 
-async def test_create_product_success(db_session, tenant, category):
+async def test_create_product_success(db, tenant, category):
     data = ProductCreate(
         sku="TEST-SKU",
         name="Test Product",
@@ -30,13 +30,13 @@ async def test_create_product_success(db_session, tenant, category):
         category_id=category.id,
         base_price=Decimal("999.00"),
     )
-    product = await ProductService.create(db_session, tenant.id, data)
+    product = await ProductService.create(db, tenant.id, data)
     assert product.sku == "TEST-SKU"
     assert product.base_price == Decimal("999.00")
     assert product.category_id == category.id
 
 
-async def test_create_product_duplicate_sku(db_session, tenant, category):
+async def test_create_product_duplicate_sku(db, tenant, category):
     data = ProductCreate(
         sku="TEST-SKU",
         name="Test Product",
@@ -44,7 +44,7 @@ async def test_create_product_duplicate_sku(db_session, tenant, category):
         category_id=category.id,
         base_price=Decimal("999.00"),
     )
-    await ProductService.create(db_session, tenant.id, data)
+    await ProductService.create(db, tenant.id, data)
     
     data2 = ProductCreate(
         sku="TEST-SKU",
@@ -54,10 +54,10 @@ async def test_create_product_duplicate_sku(db_session, tenant, category):
         base_price=Decimal("100.00"),
     )
     with pytest.raises(ConflictError, match="SKU already exists"):
-        await ProductService.create(db_session, tenant.id, data2)
+        await ProductService.create(db, tenant.id, data2)
 
 
-async def test_create_product_invalid_category(db_session, tenant):
+async def test_create_product_invalid_category(db, tenant):
     data = ProductCreate(
         sku="TEST-SKU",
         name="Test Product",
@@ -66,43 +66,43 @@ async def test_create_product_invalid_category(db_session, tenant):
         base_price=Decimal("999.00"),
     )
     with pytest.raises(NotFoundError, match="Category"):
-        await ProductService.create(db_session, tenant.id, data)
+        await ProductService.create(db, tenant.id, data)
 
 
-async def test_get_product_not_found(db_session, tenant):
+async def test_get_product_not_found(db, tenant):
     with pytest.raises(NotFoundError):
-        await ProductService.get(db_session, tenant.id, uuid4())
+        await ProductService.get(db, tenant.id, uuid4())
 
 
-async def test_search_products_by_text(db_session, tenant, category):
-    await ProductService.create(db_session, tenant.id, ProductCreate(
+async def test_search_products_by_text(db, tenant, category):
+    await ProductService.create(db, tenant.id, ProductCreate(
         sku="SKU-1", name="Gaming Laptop", slug="gaming-laptop",
         category_id=category.id, base_price=Decimal("1000")
     ))
-    await ProductService.create(db_session, tenant.id, ProductCreate(
+    await ProductService.create(db, tenant.id, ProductCreate(
         sku="SKU-2", name="Office Mouse", slug="office-mouse",
         category_id=category.id, base_price=Decimal("50")
     ))
     
     req = ProductSearchRequest(query="gaming")
-    products, total = await ProductService.search(db_session, tenant.id, req)
+    products, total = await ProductService.search(db, tenant.id, req)
     
     assert total == 1
     assert products[0].sku == "SKU-1"
 
 
-async def test_search_products_by_filters(db_session, tenant, category):
-    await ProductService.create(db_session, tenant.id, ProductCreate(
+async def test_search_products_by_filters(db, tenant, category):
+    await ProductService.create(db, tenant.id, ProductCreate(
         sku="SKU-1", name="Product 1", slug="p1",
         category_id=category.id, base_price=Decimal("1000")
     ))
-    await ProductService.create(db_session, tenant.id, ProductCreate(
+    await ProductService.create(db, tenant.id, ProductCreate(
         sku="SKU-2", name="Product 2", slug="p2",
         category_id=category.id, base_price=Decimal("2000")
     ))
     
     req = ProductSearchRequest(filters={"max_price": 1500})
-    products, total = await ProductService.search(db_session, tenant.id, req)
+    products, total = await ProductService.search(db, tenant.id, req)
     
     assert total == 1
     assert products[0].sku == "SKU-1"

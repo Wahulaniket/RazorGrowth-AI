@@ -7,6 +7,8 @@ from app.models.product import Product
 from app.models.product_variant import ProductVariant
 from app.models.inventory import Inventory
 from app.models.product_relationship import ProductRelationship
+from app.models.api_key import ApiKey
+from app.models.audit_log import AuditLog
 
 __all__ = [
     "Tenant",
@@ -20,5 +22,7 @@ __all__ = [
     "ProductVariant",
     "Inventory",
     "ProductRelationship",
+    "ApiKey",
+    "AuditLog",
 ]
 

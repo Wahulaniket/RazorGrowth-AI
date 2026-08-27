@@ -6,10 +6,11 @@ POST /auth/login    — Authenticate and receive JWT
 GET  /auth/me       — Get current authenticated user
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_current_user
+from app.core.rate_limit import rate_limit_auth
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import TokenResponse, UserLogin, UserRegister
@@ -23,10 +24,16 @@ router = APIRouter(
 )
 
 
+async def check_auth_rate_limit(request: Request):
+    ip = request.client.host if request.client else "unknown"
+    await rate_limit_auth(ip)
+
+
 @router.post(
     "/register",
     response_model=UserResponse,
     status_code=201,
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def register(
     data: UserRegister,
@@ -39,6 +46,7 @@ async def register(
 @router.post(
     "/login",
     response_model=TokenResponse,
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def login(
     data: UserLogin,

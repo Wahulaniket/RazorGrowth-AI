@@ -3,10 +3,15 @@ import os
 import uuid
 from typing import AsyncGenerator, Generator
 
+# Set environment variables required by Settings BEFORE imports
+os.environ["JWT_SECRET_KEY"] = "test_secret_for_pytest"
+os.environ["BACKEND_CORS_ORIGINS"] = '["http://localhost:3000"]'
+os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import event
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.security import create_access_token, hash_password
@@ -20,7 +25,7 @@ from app.models.user import User
 # Use a test database for integration tests
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL", 
-    "postgresql+asyncpg://razorgrowth:razorgrowth_dev@localhost:5432/razorgrowth"
+    "postgresql+asyncpg://rg_app:rg_app_dev@localhost:5432/razorgrowth"
 )
 
 engine = create_async_engine(TEST_DATABASE_URL, pool_pre_ping=True)
@@ -98,7 +103,19 @@ async def test_tenant(db: AsyncSession) -> Tenant:
     db.add(tenant)
     await db.commit()
     await db.refresh(tenant)
+    
+    # Establish RLS context for subsequent queries in unit tests
+    db.info["tenant_id"] = str(tenant.id)
+    await db.execute(text("SELECT set_config('app.current_tenant', :tenant_id, true)"), {"tenant_id": str(tenant.id)})
+    
     return tenant
+
+
+@pytest_asyncio.fixture(scope="function")
+async def tenant(test_tenant: Tenant) -> Tenant:
+    """Alias for test_tenant for use in tests."""
+    return test_tenant
+
 
 
 @pytest_asyncio.fixture(scope="function")

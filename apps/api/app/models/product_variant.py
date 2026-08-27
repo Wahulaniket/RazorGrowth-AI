@@ -36,6 +36,13 @@ class ProductVariant(Base):
         index=True,
     )
 
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
     sku: Mapped[str] = mapped_column(
         String(100),
         nullable=False,

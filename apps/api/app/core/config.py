@@ -12,9 +12,10 @@ class Settings(BaseSettings):
     redis_url: str
 
     # JWT Authentication
-    jwt_secret_key: str = "CHANGE_ME"
+    jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
+    backend_cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8080"]
 
     model_config = SettingsConfigDict(
         env_file=".env",
