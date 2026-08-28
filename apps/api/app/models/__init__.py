@@ -9,6 +9,8 @@ from app.models.inventory import Inventory
 from app.models.product_relationship import ProductRelationship
 from app.models.api_key import ApiKey
 from app.models.audit_log import AuditLog
+from app.models.cart import Cart
+from app.models.cart_item import CartItem
 
 __all__ = [
     "Tenant",
@@ -24,5 +26,6 @@ __all__ = [
     "ProductRelationship",
     "ApiKey",
     "AuditLog",
+    "Cart",
+    "CartItem",
 ]
-

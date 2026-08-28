@@ -6,8 +6,8 @@ and tenant scoping.
 """
 
 from uuid import UUID
-
 from fastapi import Depends, Header
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,22 +18,20 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.repositories.user import UserRepository
 
+bearer_scheme = HTTPBearer(auto_error=False)
 
 async def get_current_user(
     db: AsyncSession = Depends(get_db),
-    authorization: str | None = Header(default=None, alias="Authorization"),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> User:
-    """Extract and validate the current user from the JWT token.
+    """Extract and validate the current user from the JWT token."""
 
-    Expected header format: Authorization: Bearer <token>
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise InvalidTokenError(
+            message="Invalid authorization header format or missing."
+        )
 
-    Raises:
-        InvalidTokenError: If the token is missing, invalid, or expired.
-    """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise InvalidTokenError(message="Invalid authorization header format or missing.")
-
-    token = authorization[7:]  # Strip "Bearer "
+    token = credentials.credentials
 
     try:
         payload = decode_access_token(token)
@@ -41,6 +39,7 @@ async def get_current_user(
         raise InvalidTokenError()
 
     user_id_str: str | None = payload.get("sub")
+
     if user_id_str is None:
         raise InvalidTokenError(message="Token missing subject claim.")
 
@@ -50,6 +49,7 @@ async def get_current_user(
         raise InvalidTokenError(message="Invalid user ID in token.")
 
     user = await UserRepository.get_by_id(db, user_id)
+
     if user is None:
         raise InvalidTokenError(message="User not found.")
 
