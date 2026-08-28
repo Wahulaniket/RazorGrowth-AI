@@ -1045,7 +1045,7 @@ async def test_invalid_tool_arguments(
 async def test_tool_registry_unknown_tool():
     """ToolRegistry.execute returns error for unknown tools."""
     registry = create_catalog_tool_registry()
-    result = await registry.execute("cart.add", {}, None, uuid.uuid4())  # type: ignore
+    result = await registry.execute("cart.add", {}, None, uuid.uuid4(), uuid.uuid4())  # type: ignore
     assert not result.success
     assert "Unknown tool" in (result.error or "")
 
@@ -1054,7 +1054,7 @@ async def test_tool_registry_oversized_input():
     """ToolRegistry.execute rejects oversized inputs."""
     registry = create_catalog_tool_registry()
     huge_args = {"query": "x" * 5000}
-    result = await registry.execute("catalog.search", huge_args, None, uuid.uuid4())  # type: ignore
+    result = await registry.execute("catalog.search", huge_args, None, uuid.uuid4(), uuid.uuid4())  # type: ignore
     assert not result.success
     assert "exceeds" in (result.error or "").lower() or "size" in (result.error or "").lower()
 

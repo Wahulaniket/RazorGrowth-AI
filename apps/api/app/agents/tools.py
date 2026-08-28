@@ -27,6 +27,8 @@ from app.schemas.ai_catalog import (
     AICatalogSearchRequest,
 )
 from app.services.ai_catalog import AICatalogService
+from app.schemas.cart import CartItemCreate, CartItemUpdate
+from app.services.cart_service import CartService, CartConfirmationRequired, CartError
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +110,7 @@ def _serialize_for_model(obj: Any) -> Any:
 
 
 async def _handle_catalog_search(
-    db: AsyncSession, tenant_id: UUID, args: dict[str, Any]
+    db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]
 ) -> ToolResult:
     """Execute catalog.search using AICatalogService."""
     start = time.monotonic()
@@ -139,7 +141,7 @@ async def _handle_catalog_search(
 
 
 async def _handle_get_product(
-    db: AsyncSession, tenant_id: UUID, args: dict[str, Any]
+    db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]
 ) -> ToolResult:
     """Execute catalog.get_product using AICatalogService."""
     start = time.monotonic()
@@ -158,7 +160,7 @@ async def _handle_get_product(
 
 
 async def _handle_get_variant(
-    db: AsyncSession, tenant_id: UUID, args: dict[str, Any]
+    db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]
 ) -> ToolResult:
     """Execute catalog.get_variant using AICatalogService."""
     start = time.monotonic()
@@ -178,7 +180,7 @@ async def _handle_get_variant(
 
 
 async def _handle_check_availability(
-    db: AsyncSession, tenant_id: UUID, args: dict[str, Any]
+    db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]
 ) -> ToolResult:
     """Execute catalog.check_availability using AICatalogService."""
     start = time.monotonic()
@@ -196,7 +198,7 @@ async def _handle_check_availability(
 
 
 async def _handle_get_relationships(
-    db: AsyncSession, tenant_id: UUID, args: dict[str, Any]
+    db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]
 ) -> ToolResult:
     """Execute catalog.get_relationships using AICatalogService."""
     start = time.monotonic()
@@ -216,6 +218,141 @@ async def _handle_get_relationships(
         return ToolResult(success=False, error=f"Invalid arguments: {e}", latency_ms=(time.monotonic() - start) * 1000)
     except Exception as e:
         logger.exception("catalog.get_relationships failed")
+        return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
+
+
+class CartItemInputSchema(BaseModel):
+    product_id: str = Field(description="UUID of the product to add")
+    variant_id: str | None = Field(default=None, description="UUID of the variant (if applicable)")
+    quantity: int = Field(default=1, gt=0, description="Quantity to add")
+    confirmation_token: str | None = Field(default=None, description="Token provided by the user for confirmation")
+
+
+class CartItemUpdateSchema(BaseModel):
+    item_id: str = Field(description="UUID of the cart item to update")
+    quantity: int = Field(gt=0, description="New quantity")
+    confirmation_token: str | None = Field(default=None, description="Token provided by the user for confirmation")
+
+
+class CartItemIdInputSchema(BaseModel):
+    item_id: str = Field(description="UUID of the cart item")
+    confirmation_token: str | None = Field(default=None, description="Token provided by the user for confirmation")
+
+
+class CartClearInputSchema(BaseModel):
+    confirmation_token: str | None = Field(default=None, description="Token provided by the user for confirmation")
+
+
+class EmptyInputSchema(BaseModel):
+    pass
+
+
+# ---------------------------------------------------------------------------
+# Cart tool handlers
+# ---------------------------------------------------------------------------
+
+async def _handle_cart_get(db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]) -> ToolResult:
+    start = time.monotonic()
+    try:
+        cart = await CartService.get_or_create_cart(db, tenant_id, user_id)
+        from app.api.routes.cart import _build_cart_response
+        data = _serialize_for_model(_build_cart_response(cart))
+        return ToolResult(success=True, data=data, latency_ms=(time.monotonic() - start) * 1000)
+    except Exception as e:
+        logger.exception("cart.get failed")
+        return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
+
+
+async def _handle_cart_add_item(db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]) -> ToolResult:
+    start = time.monotonic()
+    try:
+        validated = CartItemInputSchema(**args)
+        item_create = CartItemCreate(
+            product_id=UUID(validated.product_id),
+            variant_id=UUID(validated.variant_id) if validated.variant_id else None,
+            quantity=validated.quantity
+        )
+        await CartService.add_item(db, tenant_id, user_id, item_create, validated.confirmation_token)
+        await db.commit()
+        return ToolResult(success=True, data={"status": "success"}, latency_ms=(time.monotonic() - start) * 1000)
+    except CartConfirmationRequired as e:
+        # Expected flow: returning confirmation requirement
+        await db.rollback()
+        return ToolResult(success=True, data={"status": "confirmation_required", "details": e.confirmation.model_dump(mode="json")}, latency_ms=(time.monotonic() - start) * 1000)
+    except (CartError, ValueError, PydanticValidationError) as e:
+        await db.rollback()
+        return ToolResult(success=False, error=f"Invalid action: {e}", latency_ms=(time.monotonic() - start) * 1000)
+    except Exception as e:
+        await db.rollback()
+        logger.exception("cart.add_item failed")
+        return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
+
+
+async def _handle_cart_update_item(db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]) -> ToolResult:
+    start = time.monotonic()
+    try:
+        validated = CartItemUpdateSchema(**args)
+        item_update = CartItemUpdate(quantity=validated.quantity)
+        await CartService.update_item(db, tenant_id, user_id, UUID(validated.item_id), item_update, validated.confirmation_token)
+        await db.commit()
+        return ToolResult(success=True, data={"status": "success"}, latency_ms=(time.monotonic() - start) * 1000)
+    except CartConfirmationRequired as e:
+        await db.rollback()
+        return ToolResult(success=True, data={"status": "confirmation_required", "details": e.confirmation.model_dump(mode="json")}, latency_ms=(time.monotonic() - start) * 1000)
+    except (CartError, ValueError, PydanticValidationError) as e:
+        await db.rollback()
+        return ToolResult(success=False, error=f"Invalid action: {e}", latency_ms=(time.monotonic() - start) * 1000)
+    except Exception as e:
+        await db.rollback()
+        logger.exception("cart.update_item failed")
+        return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
+
+
+async def _handle_cart_remove_item(db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]) -> ToolResult:
+    start = time.monotonic()
+    try:
+        validated = CartItemIdInputSchema(**args)
+        await CartService.remove_item(db, tenant_id, user_id, UUID(validated.item_id), validated.confirmation_token)
+        await db.commit()
+        return ToolResult(success=True, data={"status": "success"}, latency_ms=(time.monotonic() - start) * 1000)
+    except CartConfirmationRequired as e:
+        await db.rollback()
+        return ToolResult(success=True, data={"status": "confirmation_required", "details": e.confirmation.model_dump(mode="json")}, latency_ms=(time.monotonic() - start) * 1000)
+    except (CartError, ValueError, PydanticValidationError) as e:
+        await db.rollback()
+        return ToolResult(success=False, error=f"Invalid action: {e}", latency_ms=(time.monotonic() - start) * 1000)
+    except Exception as e:
+        await db.rollback()
+        logger.exception("cart.remove_item failed")
+        return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
+
+
+async def _handle_cart_clear(db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]) -> ToolResult:
+    start = time.monotonic()
+    try:
+        validated = CartClearInputSchema(**args)
+        await CartService.clear_cart(db, tenant_id, user_id, validated.confirmation_token)
+        await db.commit()
+        return ToolResult(success=True, data={"status": "success"}, latency_ms=(time.monotonic() - start) * 1000)
+    except CartConfirmationRequired as e:
+        await db.rollback()
+        return ToolResult(success=True, data={"status": "confirmation_required", "details": e.confirmation.model_dump(mode="json")}, latency_ms=(time.monotonic() - start) * 1000)
+    except (CartError, ValueError, PydanticValidationError) as e:
+        await db.rollback()
+        return ToolResult(success=False, error=f"Invalid action: {e}", latency_ms=(time.monotonic() - start) * 1000)
+    except Exception as e:
+        await db.rollback()
+        logger.exception("cart.clear failed")
+        return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
+
+
+async def _handle_cart_validate(db: AsyncSession, tenant_id: UUID, user_id: UUID, args: dict[str, Any]) -> ToolResult:
+    start = time.monotonic()
+    try:
+        res = await CartService.validate_cart(db, tenant_id, user_id)
+        return ToolResult(success=True, data=_serialize_for_model(res), latency_ms=(time.monotonic() - start) * 1000)
+    except Exception as e:
+        logger.exception("cart.validate failed")
         return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
 
 
@@ -263,6 +400,7 @@ class ToolRegistry:
         arguments: dict[str, Any],
         db: AsyncSession,
         tenant_id: UUID,
+        user_id: UUID,
     ) -> ToolResult:
         """
         Validate and execute a tool call.
@@ -270,7 +408,7 @@ class ToolRegistry:
         - Rejects unknown tools.
         - Validates argument size.
         - Validates arguments with Pydantic.
-        - Injects db and tenant_id (from session, never from LLM).
+        - Injects db, tenant_id, and user_id (from session, never from LLM).
         """
         tool = self._tools.get(tool_name)
         if not tool:
@@ -287,8 +425,8 @@ class ToolRegistry:
         except PydanticValidationError as e:
             return ToolResult(success=False, error=f"Invalid arguments: {e}")
 
-        # Execute handler — tenant_id comes from session, not from the LLM
-        return await tool.handler(db, tenant_id, arguments)
+        # Execute handler
+        return await tool.handler(db, tenant_id, user_id, arguments)
 
 
 # ---------------------------------------------------------------------------
@@ -386,6 +524,98 @@ def create_catalog_tool_registry() -> ToolRegistry:
         },
         input_model=ProductIdInput,
         handler=_handle_get_relationships,
+    ))
+
+    registry.register(ToolDefinition(
+        name="cart.get",
+        description="Retrieve the current user's shopping cart.",
+        input_schema={
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False,
+        },
+        input_model=EmptyInputSchema,
+        handler=_handle_cart_get,
+    ))
+
+    registry.register(ToolDefinition(
+        name="cart.add_item",
+        description="Add a product to the cart. If a confirmation token is returned, ask the user to confirm using the details provided, and then re-call this tool with the token.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "UUID of the product"},
+                "variant_id": {"type": "string", "description": "UUID of the variant (optional)"},
+                "quantity": {"type": "integer", "description": "Quantity to add"},
+                "confirmation_token": {"type": "string", "description": "Token to confirm mutation (leave empty on first call)"},
+            },
+            "required": ["product_id", "quantity"],
+            "additionalProperties": False,
+        },
+        input_model=CartItemInputSchema,
+        handler=_handle_cart_add_item,
+    ))
+
+    registry.register(ToolDefinition(
+        name="cart.update_item",
+        description="Update the quantity of an item in the cart. Requires confirmation token.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "item_id": {"type": "string", "description": "UUID of the cart item"},
+                "quantity": {"type": "integer", "description": "New quantity"},
+                "confirmation_token": {"type": "string", "description": "Token to confirm mutation (leave empty on first call)"},
+            },
+            "required": ["item_id", "quantity"],
+            "additionalProperties": False,
+        },
+        input_model=CartItemUpdateSchema,
+        handler=_handle_cart_update_item,
+    ))
+
+    registry.register(ToolDefinition(
+        name="cart.remove_item",
+        description="Remove an item from the cart. Requires confirmation token.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "item_id": {"type": "string", "description": "UUID of the cart item"},
+                "confirmation_token": {"type": "string", "description": "Token to confirm mutation (leave empty on first call)"},
+            },
+            "required": ["item_id"],
+            "additionalProperties": False,
+        },
+        input_model=CartItemIdInputSchema,
+        handler=_handle_cart_remove_item,
+    ))
+
+    registry.register(ToolDefinition(
+        name="cart.clear",
+        description="Clear all items from the cart. Requires confirmation token.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "confirmation_token": {"type": "string", "description": "Token to confirm mutation (leave empty on first call)"},
+            },
+            "required": [],
+            "additionalProperties": False,
+        },
+        input_model=CartClearInputSchema,
+        handler=_handle_cart_clear,
+    ))
+
+    registry.register(ToolDefinition(
+        name="cart.validate",
+        description="Validate the cart (check for price changes and inventory availability).",
+        input_schema={
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False,
+        },
+        input_model=EmptyInputSchema,
+        handler=_handle_cart_validate,
     ))
 
     return registry

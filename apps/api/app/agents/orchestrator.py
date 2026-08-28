@@ -223,6 +223,7 @@ async def run_shopping_agent(
                 arguments=tc.arguments,
                 db=db,
                 tenant_id=tenant_id,
+                user_id=user_id,
             )
 
             tool_latency_total += result.latency_ms
