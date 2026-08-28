@@ -7,6 +7,9 @@ from typing import AsyncGenerator, Generator
 os.environ["JWT_SECRET_KEY"] = "test_secret_for_pytest"
 os.environ["BACKEND_CORS_ORIGINS"] = '["http://localhost:3000"]'
 os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+os.environ["LLM_PROVIDER"] = "fake"
+os.environ["LLM_API_KEY"] = ""
+os.environ["LLM_MODEL"] = "fake-model"
 
 import pytest
 import pytest_asyncio

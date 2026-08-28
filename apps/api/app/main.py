@@ -17,6 +17,7 @@ from app.api.routes.tenants import router as tenant_router
 from app.api.routes.users import router as users_router
 from app.api.routes.api_keys import router as api_keys_router
 from app.api.routes.catalog import router as catalog_router
+from app.api.routes.agent import router as agent_router
 from app.core.exceptions import RazorGrowthError
 from app.db.session import get_db
 from app.core.config import get_settings
@@ -75,6 +76,7 @@ api_router.include_router(users_router)
 api_router.include_router(tenant_router)
 api_router.include_router(api_keys_router)
 api_router.include_router(catalog_router)
+api_router.include_router(agent_router)
 
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(categories_router, prefix="/api/v1")

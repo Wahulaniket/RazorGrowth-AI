@@ -12,3 +12,6 @@ class PermissionEnum(str, Enum):
     # Tenants
     TENANT_READ = "tenant.read"
     TENANT_WRITE = "tenant.write"
+
+    # Agent
+    AGENT_USE = "agent.use"
