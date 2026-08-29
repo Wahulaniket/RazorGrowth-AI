@@ -11,7 +11,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_current_tenant
+from app.api.dependencies import get_current_tenant, require_permission
+from app.core.permissions import PermissionEnum
 from app.db.session import get_db
 from app.models.tenant import Tenant
 from app.schemas.inventory import InventoryResponse, InventoryUpdate
@@ -63,6 +64,7 @@ def _product_to_response(product) -> ProductResponse:
     "",
     response_model=ProductResponse,
     status_code=201,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))],
 )
 async def create_product(
     data: ProductCreate,
@@ -77,6 +79,7 @@ async def create_product(
 @router.get(
     "",
     response_model=ProductListResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))],
 )
 async def list_products(
     category_id: UUID | None = Query(default=None),
@@ -109,6 +112,7 @@ async def list_products(
 @router.get(
     "/{product_id}",
     response_model=ProductResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))],
 )
 async def get_product(
     product_id: UUID,
@@ -123,6 +127,7 @@ async def get_product(
 @router.put(
     "/{product_id}",
     response_model=ProductResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))],
 )
 async def update_product(
     product_id: UUID,
@@ -141,6 +146,7 @@ async def update_product(
 @router.post(
     "/search",
     response_model=ProductListResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))],
 )
 async def search_products(
     data: ProductSearchRequest,
@@ -165,6 +171,7 @@ async def search_products(
 @router.get(
     "/{product_id}/inventory",
     response_model=InventoryResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))],
 )
 async def get_inventory(
     product_id: UUID,
@@ -187,6 +194,7 @@ async def get_inventory(
 @router.put(
     "/{product_id}/inventory",
     response_model=InventoryResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))],
 )
 async def update_inventory(
     product_id: UUID,
@@ -211,6 +219,7 @@ async def update_inventory(
 @router.get(
     "/{product_id}/relationships",
     response_model=list[RelationshipResponse],
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))],
 )
 async def get_relationships(
     product_id: UUID,
@@ -241,6 +250,7 @@ async def get_relationships(
     "/{product_id}/relationships",
     response_model=RelationshipResponse,
     status_code=201,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))],
 )
 async def create_relationship(
     product_id: UUID,
@@ -271,6 +281,7 @@ async def create_relationship(
     "/{product_id}/variants",
     response_model=VariantResponse,
     status_code=201,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))],
 )
 async def create_variant(
     product_id: UUID,
@@ -304,6 +315,7 @@ async def create_variant(
 @router.get(
     "/{product_id}/variants",
     response_model=list[VariantResponse],
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))],
 )
 async def list_variants(
     product_id: UUID,

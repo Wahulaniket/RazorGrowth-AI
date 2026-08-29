@@ -9,7 +9,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_current_tenant
+from app.api.dependencies import get_current_tenant, require_permission
+from app.core.permissions import PermissionEnum
 from app.db.session import get_db
 from app.models.tenant import Tenant
 from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate
@@ -26,6 +27,7 @@ router = APIRouter(
     "",
     response_model=CategoryResponse,
     status_code=201,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))],
 )
 async def create_category(
     data: CategoryCreate,
@@ -39,6 +41,7 @@ async def create_category(
 @router.get(
     "",
     response_model=list[CategoryResponse],
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))],
 )
 async def list_categories(
     parent_id: UUID | None = Query(default=None),
@@ -52,6 +55,7 @@ async def list_categories(
 @router.get(
     "/{category_id}",
     response_model=CategoryResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))],
 )
 async def get_category(
     category_id: UUID,
@@ -65,6 +69,7 @@ async def get_category(
 @router.put(
     "/{category_id}",
     response_model=CategoryResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))],
 )
 async def update_category(
     category_id: UUID,

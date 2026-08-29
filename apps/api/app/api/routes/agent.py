@@ -13,8 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.llm import FakeLLMProvider, LLMProvider, create_llm_provider
 from app.agents.orchestrator import run_shopping_agent
 from app.agents.tools import create_catalog_tool_registry
-from app.api.dependencies import get_api_key_tenant, get_current_tenant, get_current_user
+from app.api.dependencies import get_api_key_tenant, get_current_tenant, get_current_user, require_permission
 from app.core.config import get_settings
+from app.core.permissions import PermissionEnum
 from app.db.session import get_db
 from app.models.tenant import Tenant
 from app.models.user import User
@@ -44,6 +45,7 @@ def _get_llm_provider() -> LLMProvider:
 @router.post(
     "/chat",
     response_model=AgentChatResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.AGENT_USE))],
 )
 async def agent_chat(
     body: AgentChatRequest,
@@ -105,6 +107,7 @@ async def agent_chat(
 @router.post(
     "/chat/apikey",
     response_model=AgentChatResponse,
+    dependencies=[Depends(require_permission(PermissionEnum.AGENT_USE))],
 )
 async def agent_chat_apikey(
     body: AgentChatRequest,

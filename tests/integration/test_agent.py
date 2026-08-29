@@ -874,10 +874,8 @@ async def test_rbac_enforcement(
             "X-Tenant-ID": str(test_tenant.id),
         },
     )
-    # The endpoint requires valid auth and tenant membership.
-    # With LLM_PROVIDER=fake in tests, it will get a response.
-    # The key check is that authentication and tenant membership are enforced.
-    assert res.status_code in (200, 500)  # 500 only if LLM config issue
+    # The endpoint requires valid auth and tenant membership AND agent.use.
+    assert res.status_code == 403
 
 
 # ---------------------------------------------------------------------------

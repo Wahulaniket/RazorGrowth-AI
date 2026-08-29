@@ -27,6 +27,16 @@ async def setup_cart_data(db: AsyncSession, test_user, tenant):
         db.add(role)
         await db.flush()
         
+        from app.models.role import Permission, RolePermission
+        perm_read = Permission(name="catalog.read")
+        perm_write = Permission(name="catalog.write")
+        db.add_all([perm_read, perm_write])
+        await db.flush()
+        
+        db.add(RolePermission(role_id=role.id, permission_id=perm_read.id))
+        db.add(RolePermission(role_id=role.id, permission_id=perm_write.id))
+        await db.flush()
+        
     mem = TenantMembership(user_id=test_user.id, tenant_id=tenant.id, role_id=role.id)
     db.add(mem)
     await db.flush()

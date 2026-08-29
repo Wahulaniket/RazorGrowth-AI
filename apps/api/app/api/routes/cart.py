@@ -8,7 +8,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_current_tenant, get_current_user, get_db
+from app.api.dependencies import get_current_tenant, get_current_user, get_db, require_permission
+from app.core.permissions import PermissionEnum
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.cart import (
@@ -57,7 +58,7 @@ def _build_cart_response(cart) -> CartResponse:
     )
 
 
-@router.get("/", response_model=CartResponse)
+@router.get("/", response_model=CartResponse, dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))])
 async def get_cart(
     db: AsyncSession = Depends(get_db),
     tenant: Tenant = Depends(get_current_tenant),
@@ -67,7 +68,7 @@ async def get_cart(
     return _build_cart_response(cart)
 
 
-@router.post("/items", response_model=CartResponse)
+@router.post("/items", response_model=CartResponse, dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))])
 async def add_cart_item(
     item_in: CartItemCreate,
     confirmation_token: str | None = None,
@@ -90,7 +91,7 @@ async def add_cart_item(
     return _build_cart_response(cart)
 
 
-@router.put("/items/{item_id}", response_model=CartResponse)
+@router.put("/items/{item_id}", response_model=CartResponse, dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))])
 async def update_cart_item(
     item_id: uuid.UUID,
     item_in: CartItemUpdate,
@@ -114,7 +115,7 @@ async def update_cart_item(
     return _build_cart_response(cart)
 
 
-@router.delete("/items/{item_id}", response_model=CartResponse)
+@router.delete("/items/{item_id}", response_model=CartResponse, dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))])
 async def remove_cart_item(
     item_id: uuid.UUID,
     confirmation_token: str | None = None,
@@ -137,7 +138,7 @@ async def remove_cart_item(
     return _build_cart_response(cart)
 
 
-@router.delete("/", response_model=CartResponse)
+@router.delete("/", response_model=CartResponse, dependencies=[Depends(require_permission(PermissionEnum.CATALOG_WRITE))])
 async def clear_cart(
     confirmation_token: str | None = None,
     db: AsyncSession = Depends(get_db),
@@ -159,7 +160,7 @@ async def clear_cart(
     return _build_cart_response(cart)
 
 
-@router.get("/validate", response_model=CartValidationResult)
+@router.get("/validate", response_model=CartValidationResult, dependencies=[Depends(require_permission(PermissionEnum.CATALOG_READ))])
 async def validate_cart(
     db: AsyncSession = Depends(get_db),
     tenant: Tenant = Depends(get_current_tenant),

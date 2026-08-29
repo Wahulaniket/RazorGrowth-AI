@@ -85,4 +85,8 @@ def downgrade() -> None:
         op.execute(f"DROP POLICY IF EXISTS delete_policy ON {table};")
         op.execute(f"ALTER TABLE {table} DISABLE ROW LEVEL SECURITY;")
         
+    op.execute("REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM rg_app;")
+    op.execute("REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM rg_app;")
+    op.execute("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM rg_app;")
+    op.execute("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM rg_app;")
     op.execute("DROP ROLE IF EXISTS rg_app;")
