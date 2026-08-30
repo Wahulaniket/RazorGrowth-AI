@@ -102,12 +102,14 @@ async def test_policy_evaluation_internal(
     # This acts as an integration test for the internal evaluation endpoint
     eval_payload = {
         "action": "PAYMENT",
-        "session_id": "sess_123",
-        "amount": 150000,
-        "currency": "INR"
+        "context": {
+            "session_id": "sess_123",
+            "amount": 150000,
+            "currency": "INR"
+        }
     }
     
-    response = await client.post("/api/v1/policies/internal/evaluate", json=eval_payload, headers=admin_auth_headers)
+    response = await client.post("/api/v1/internal/policy/evaluate", json=eval_payload, headers=admin_auth_headers)
     assert response.status_code == 200, response.text
     data = response.json()
     

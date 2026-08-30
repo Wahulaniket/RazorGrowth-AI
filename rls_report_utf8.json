@@ -1,0 +1,824 @@
+﻿{
+  "rls": [
+    {
+      "table": "agent_decisions",
+      "rls_enabled": true
+    },
+    {
+      "table": "agent_tool_calls",
+      "rls_enabled": true
+    },
+    {
+      "table": "ai_messages",
+      "rls_enabled": true
+    },
+    {
+      "table": "ai_sessions",
+      "rls_enabled": true
+    },
+    {
+      "table": "alembic_version",
+      "rls_enabled": false
+    },
+    {
+      "table": "analytics_events",
+      "rls_enabled": true
+    },
+    {
+      "table": "api_keys",
+      "rls_enabled": true
+    },
+    {
+      "table": "audit_logs",
+      "rls_enabled": true
+    },
+    {
+      "table": "cart_items",
+      "rls_enabled": true
+    },
+    {
+      "table": "carts",
+      "rls_enabled": true
+    },
+    {
+      "table": "categories",
+      "rls_enabled": true
+    },
+    {
+      "table": "checkout_confirmations",
+      "rls_enabled": true
+    },
+    {
+      "table": "checkout_quotes",
+      "rls_enabled": true
+    },
+    {
+      "table": "experiment_participants",
+      "rls_enabled": true
+    },
+    {
+      "table": "experiments",
+      "rls_enabled": true
+    },
+    {
+      "table": "inventory",
+      "rls_enabled": true
+    },
+    {
+      "table": "order_items",
+      "rls_enabled": true
+    },
+    {
+      "table": "orders",
+      "rls_enabled": true
+    },
+    {
+      "table": "payment_attempts",
+      "rls_enabled": false
+    },
+    {
+      "table": "payments",
+      "rls_enabled": false
+    },
+    {
+      "table": "permissions",
+      "rls_enabled": false
+    },
+    {
+      "table": "policies",
+      "rls_enabled": true
+    },
+    {
+      "table": "product_relationships",
+      "rls_enabled": true
+    },
+    {
+      "table": "product_variants",
+      "rls_enabled": true
+    },
+    {
+      "table": "products",
+      "rls_enabled": true
+    },
+    {
+      "table": "recommendations",
+      "rls_enabled": true
+    },
+    {
+      "table": "role_permissions",
+      "rls_enabled": false
+    },
+    {
+      "table": "roles",
+      "rls_enabled": false
+    },
+    {
+      "table": "tenant_memberships",
+      "rls_enabled": true
+    },
+    {
+      "table": "tenants",
+      "rls_enabled": false
+    },
+    {
+      "table": "users",
+      "rls_enabled": false
+    },
+    {
+      "table": "webhook_events",
+      "rls_enabled": false
+    }
+  ],
+  "policies": [
+    {
+      "table": "experiments",
+      "policy": "tenant_isolation_policy",
+      "qual": "(tenant_id = (current_setting('app.current_tenant'::text, true))::uuid)"
+    },
+    {
+      "table": "experiment_participants",
+      "policy": "tenant_isolation_policy",
+      "qual": "(tenant_id = (current_setting('app.current_tenant'::text, true))::uuid)"
+    },
+    {
+      "table": "recommendations",
+      "policy": "tenant_isolation_policy",
+      "qual": "(tenant_id = (current_setting('app.current_tenant'::text, true))::uuid)"
+    },
+    {
+      "table": "ai_sessions",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "ai_sessions",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "ai_sessions",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "ai_sessions",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "agent_decisions",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "agent_decisions",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "agent_decisions",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "agent_decisions",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "agent_tool_calls",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "agent_tool_calls",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "agent_tool_calls",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "agent_tool_calls",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "ai_messages",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "ai_messages",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "ai_messages",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "ai_messages",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "tenant_memberships",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "tenant_memberships",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "tenant_memberships",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "tenant_memberships",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "categories",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "categories",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "categories",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "categories",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "products",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "products",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "products",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "products",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "product_variants",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "product_variants",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "product_variants",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "product_variants",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "checkout_quotes",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "checkout_quotes",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "checkout_quotes",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "checkout_quotes",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "inventory",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "inventory",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "inventory",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "inventory",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "orders",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "orders",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "orders",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "orders",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "checkout_confirmations",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "checkout_confirmations",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "checkout_confirmations",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "checkout_confirmations",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "order_items",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "order_items",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "order_items",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "order_items",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "analytics_events",
+      "policy": "tenant_isolation_policy",
+      "qual": "(tenant_id = (current_setting('app.current_tenant'::text, true))::uuid)"
+    },
+    {
+      "table": "audit_logs",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "audit_logs",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "audit_logs",
+      "policy": "delete_policy",
+      "qual": "false"
+    },
+    {
+      "table": "audit_logs",
+      "policy": "update_policy",
+      "qual": "false"
+    },
+    {
+      "table": "product_relationships",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "product_relationships",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "product_relationships",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "product_relationships",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "api_keys",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "api_keys",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "api_keys",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "api_keys",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "carts",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "carts",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "carts",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "carts",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "cart_items",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "cart_items",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "cart_items",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "cart_items",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "policies",
+      "policy": "delete_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "policies",
+      "policy": "update_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    },
+    {
+      "table": "policies",
+      "policy": "insert_policy",
+      "qual": null
+    },
+    {
+      "table": "policies",
+      "policy": "select_policy",
+      "qual": "(tenant_id = (NULLIF(current_setting('app.current_tenant'::text, true), ''::text))::uuid)"
+    }
+  ],
+  "privileges": {
+    "experiments": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "experiment_participants": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "recommendations": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "ai_sessions": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "agent_decisions": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "agent_tool_calls": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "ai_messages": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "alembic_version": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "permissions": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "role_permissions": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "roles": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "tenants": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "users": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "tenant_memberships": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "categories": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "products": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "product_variants": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "checkout_quotes": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "inventory": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "orders": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "checkout_confirmations": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "order_items": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "analytics_events": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "audit_logs": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "product_relationships": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "api_keys": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "webhook_events": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "carts": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "cart_items": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "payments": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "payment_attempts": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ],
+    "policies": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DELETE",
+      "TRUNCATE",
+      "REFERENCES",
+      "TRIGGER"
+    ]
+  }
+}

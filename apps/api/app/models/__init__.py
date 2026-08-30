@@ -12,6 +12,10 @@ from app.models.audit_log import AuditLog
 from app.models.cart import Cart
 from app.models.cart_item import CartItem
 from app.models.policy import Policy
+from app.models.ai_session import AISession, AIMessage, AgentToolCall, AgentDecision
+from app.models.checkout import CheckoutQuote, CheckoutConfirmation, Order, OrderItem
+from app.models.payment import Payment, PaymentAttempt, WebhookEvent
+from app.models.growth import Recommendation, Experiment, ExperimentParticipant, AnalyticsEvent
 
 __all__ = [
     "Tenant",
@@ -30,4 +34,19 @@ __all__ = [
     "Cart",
     "CartItem",
     "Policy",
+    "AISession",
+    "AIMessage",
+    "AgentToolCall",
+    "AgentDecision",
+    "CheckoutQuote",
+    "CheckoutConfirmation",
+    "Order",
+    "OrderItem",
+    "Payment",
+    "PaymentAttempt",
+    "WebhookEvent",
+    "Recommendation",
+    "Experiment",
+    "ExperimentParticipant",
+    "AnalyticsEvent",
 ]

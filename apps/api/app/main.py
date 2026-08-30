@@ -20,6 +20,10 @@ from app.api.routes.catalog import router as catalog_router
 from app.api.routes.agent import router as agent_router
 from app.api.routes.cart import router as cart_router
 from app.api.routes.policies import router as policies_router
+from app.api.routes.checkout import router as checkout_router
+from app.api.routes.payments import router as payments_router
+from app.api.routes.webhooks import router as webhooks_router
+from app.api.routes.growth import router as growth_router
 from app.core.exceptions import RazorGrowthError
 from app.db.session import get_db
 from app.core.config import get_settings
@@ -80,7 +84,11 @@ api_router.include_router(api_keys_router)
 api_router.include_router(catalog_router)
 api_router.include_router(agent_router)
 api_router.include_router(cart_router, prefix="/cart")
-api_router.include_router(policies_router, prefix="/policies")
+api_router.include_router(policies_router)
+api_router.include_router(checkout_router, prefix="/checkout")
+api_router.include_router(payments_router)
+api_router.include_router(webhooks_router)
+api_router.include_router(growth_router)
 
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(categories_router, prefix="/api/v1")

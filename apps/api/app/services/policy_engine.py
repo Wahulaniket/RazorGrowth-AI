@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.policy import Policy
 from app.schemas.policy import PolicyCreate, PolicyDecision, PolicyEvaluationRequest, PolicyUpdate
+from app.services.audit import AuditService
 
 
 class PolicyEngineService:
@@ -29,6 +30,22 @@ class PolicyEngineService:
             is_active=policy_in.is_active,
         )
         db.add(policy)
+        await db.flush()
+        return policy
+
+    @staticmethod
+    async def update_policy(db: AsyncSession, tenant_id: UUID, policy_id: UUID, policy_in: PolicyUpdate) -> Policy:
+        result = await db.execute(
+            select(Policy).where(Policy.id == policy_id, Policy.tenant_id == tenant_id)
+        )
+        policy = result.scalar_one_or_none()
+        if not policy:
+            raise ValueError("Policy not found")
+
+        update_data = policy_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(policy, field, value)
+            
         await db.flush()
         return policy
 
@@ -59,7 +76,9 @@ class PolicyEngineService:
                     if amount is None:
                         return PolicyDecision(decision="DENY", reasons=["MISSING_AMOUNT_CONTEXT"])
                     if amount > max_amount:
-                        return PolicyDecision(decision="DENY", reasons=[f"EXCEEDS_MAX_AMOUNT ({policy.name})"])
+                        decision = PolicyDecision(decision="DENY", reasons=[f"EXCEEDS_MAX_AMOUNT ({policy.name})"])
+                        await AuditService.log_event(db, "policy.blocked", {"action": action, "reasons": decision.reasons, "context": context}, tenant_id)
+                        return decision
 
             # Evaluate CONFIRMATION_REQUIREMENT
             if policy.policy_type == "CONFIRMATION_REQUIREMENT" and action == "PAYMENT":
@@ -67,7 +86,9 @@ class PolicyEngineService:
                 if require_confirmation:
                     confirmed = context.get("customer_confirmed")
                     if not confirmed:
-                        return PolicyDecision(decision="DENY", reasons=[f"CUSTOMER_CONFIRMATION_REQUIRED ({policy.name})"])
+                        decision = PolicyDecision(decision="DENY", reasons=[f"CUSTOMER_CONFIRMATION_REQUIRED ({policy.name})"])
+                        await AuditService.log_event(db, "policy.blocked", {"action": action, "reasons": decision.reasons, "context": context}, tenant_id)
+                        return decision
 
             # Evaluate DISCOUNT_LIMIT
             if policy.policy_type == "DISCOUNT_LIMIT" and action in ("DISCOUNT", "PAYMENT"):
@@ -75,7 +96,9 @@ class PolicyEngineService:
                 applied_discount = context.get("discount_percent")
                 if max_discount is not None and applied_discount is not None:
                     if applied_discount > max_discount:
-                        return PolicyDecision(decision="DENY", reasons=[f"EXCEEDS_MAX_DISCOUNT ({policy.name})"])
+                        decision = PolicyDecision(decision="DENY", reasons=[f"EXCEEDS_MAX_DISCOUNT ({policy.name})"])
+                        await AuditService.log_event(db, "policy.blocked", {"action": action, "reasons": decision.reasons, "context": context}, tenant_id)
+                        return decision
 
         if not reasons:
             reasons = ["ALL_POLICIES_PASSED"]

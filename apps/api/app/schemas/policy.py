@@ -32,11 +32,7 @@ class PolicyResponse(PolicyCreate):
 
 class PolicyEvaluationRequest(BaseModel):
     action: str
-    session_id: str
-    amount: Optional[float] = None
-    currency: Optional[str] = None
-    customer_confirmed: Optional[bool] = None
-    merchant_id: Optional[str] = None
+    context: Dict[str, Any] = Field(default_factory=dict)
 
 class PolicyDecision(BaseModel):
     decision: Literal["ALLOW", "DENY"]

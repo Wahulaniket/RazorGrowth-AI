@@ -19,6 +19,10 @@ class AgentChatRequest(BaseModel):
         max_length=2000,
         description="Natural language shopping request",
     )
+    session_id: str | None = Field(
+        default=None,
+        description="Optional session ID to continue an existing conversation",
+    )
 
 
 class AgentRecommendation(BaseModel):
@@ -32,6 +36,7 @@ class AgentRecommendation(BaseModel):
 
 class AgentChatResponse(BaseModel):
     """Response from the agent chat endpoint."""
+    session_id: str
     message: str
     recommendations: list[AgentRecommendation] = Field(default_factory=list)
     constraints: dict[str, Any] = Field(default_factory=dict)

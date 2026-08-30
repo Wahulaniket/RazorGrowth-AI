@@ -22,6 +22,23 @@ class Settings(BaseSettings):
     llm_model: str = "gpt-4o-mini"
     llm_provider: str = "openai"  # "openai" | "fake"
 
+    # Payment Provider
+    payment_provider: str = "fake"  # "fake" | "razorpay"
+    razorpay_key_id: str = ""
+    razorpay_key_secret: str = ""
+    razorpay_webhook_secret: str = ""
+
+    def validate_production(self):
+        if self.app_env == "production":
+            if not self.razorpay_key_id or self.razorpay_key_id in ["", "CHANGE_ME", "test"]:
+                raise ValueError("Valid RAZORPAY_KEY_ID is required in production")
+            if not self.razorpay_key_secret or self.razorpay_key_secret in ["", "CHANGE_ME", "test"]:
+                raise ValueError("Valid RAZORPAY_KEY_SECRET is required in production")
+            if not self.razorpay_webhook_secret or self.razorpay_webhook_secret in ["", "CHANGE_ME", "test"]:
+                raise ValueError("Valid RAZORPAY_WEBHOOK_SECRET is required in production")
+            if self.jwt_secret_key in ["", "CHANGE_ME", "secret", "test-secret"]:
+                raise ValueError("Valid JWT_SECRET_KEY is required in production")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -31,4 +48,6 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    settings = Settings()
+    settings.validate_production()
+    return settings

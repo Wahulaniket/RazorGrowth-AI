@@ -22,10 +22,12 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.agents.llm import LLMProvider, LLMMessage, LLMResponse, ToolCall
 from app.agents.tools import ToolRegistry, ToolResult
 from app.services.audit import AuditService
+from app.models.ai_session import AISession, AIMessage, AgentToolCall, AgentDecision
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +108,7 @@ class AgentResult:
     model_latency_ms: float
     tool_latency_ms: float
     outcome: str  # "success", "max_iterations", "error"
+    session_id: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +123,7 @@ async def run_shopping_agent(
     registry: ToolRegistry,
     user_id: UUID | None = None,
     request_id: str | None = None,
+    session_id_str: str | None = None,
 ) -> AgentResult:
     """
     Execute the bounded shopping agent loop.
@@ -159,10 +163,46 @@ async def run_shopping_agent(
         logger.warning("Failed to write audit log for agent.request_received")
 
     # Build conversation
-    messages: list[LLMMessage] = [
-        LLMMessage(role="system", content=SYSTEM_PROMPT),
-        LLMMessage(role="user", content=user_message),
-    ]
+    session = None
+    if session_id_str:
+        try:
+            session_uuid = UUID(session_id_str)
+            result = await db.execute(select(AISession).where(AISession.id == session_uuid, AISession.tenant_id == tenant_id))
+            session = result.scalar_one_or_none()
+        except ValueError:
+            pass
+
+    if not session:
+        session = AISession(
+            tenant_id=tenant_id,
+            customer_id=user_id,
+            channel="WEB",
+            status="ACTIVE",
+            current_state="DISCOVERY",
+        )
+        db.add(session)
+        await db.flush()
+        await db.refresh(session)
+    
+    # Load previous messages
+    db_messages = await db.execute(select(AIMessage).where(AIMessage.session_id == session.id).order_by(AIMessage.created_at))
+    db_messages = db_messages.scalars().all()
+
+    messages: list[LLMMessage] = [LLMMessage(role="system", content=SYSTEM_PROMPT)]
+    for msg in db_messages:
+        messages.append(LLMMessage(role=msg.role, content=msg.content))
+    
+    messages.append(LLMMessage(role="user", content=user_message))
+    
+    # Persist user message
+    user_db_msg = AIMessage(
+        tenant_id=tenant_id,
+        session_id=session.id,
+        role="user",
+        content=user_message,
+    )
+    db.add(user_db_msg)
+    await db.flush()
 
     tool_schemas = registry.get_openai_tool_schemas()
     outcome = "success"
@@ -231,6 +271,19 @@ async def run_shopping_agent(
             if result.success and tc.tool_name not in tools_used:
                 tools_used.append(tc.tool_name)
 
+            # Persist Tool Call
+            db_tc = AgentToolCall(
+                tenant_id=tenant_id,
+                session_id=session.id,
+                tool_name=tc.tool_name,
+                arguments=tc.arguments,
+                result=result.data if result.success else {"error": result.error},
+                status="SUCCESS" if result.success else "ERROR",
+                execution_time_ms=int(result.latency_ms),
+            )
+            db.add(db_tc)
+            await db.flush()
+
             trace.append(TraceEvent(
                 event="agent.tool_completed",
                 data={
@@ -269,6 +322,16 @@ async def run_shopping_agent(
                 tool_call_id=tc.id,
                 name=tc.tool_name,
             ))
+            
+            db_tool_msg = AIMessage(
+                tenant_id=tenant_id,
+                session_id=session.id,
+                role="tool",
+                content=tool_response_content,
+                metadata_={"tool_call_id": tc.id, "name": tc.tool_name}
+            )
+            db.add(db_tool_msg)
+            await db.flush()
     else:
         # Loop exhausted without a final response
         outcome = "max_iterations"
@@ -278,6 +341,29 @@ async def run_shopping_agent(
             "the allowed number of steps. Here's what I found so far based on "
             "the catalog data."
         )
+
+    # Persist final assistant message
+    final_db_msg = AIMessage(
+        tenant_id=tenant_id,
+        session_id=session.id,
+        role="assistant",
+        content=final_message,
+    )
+    db.add(final_db_msg)
+
+    if final_recommendations:
+        db_decision = AgentDecision(
+            tenant_id=tenant_id,
+            session_id=session.id,
+            decision_type="PRODUCT_RECOMMENDATION",
+            decision_summary="Recommended products based on constraints",
+            input_context={"constraints": final_constraints},
+            decision_data={"recommendations": final_recommendations},
+        )
+        db.add(db_decision)
+        session.current_state = "RECOMMENDING"
+    
+    await db.commit()
 
     total_latency = (time.monotonic() - start_total) * 1000
 
@@ -324,6 +410,7 @@ async def run_shopping_agent(
         model_latency_ms=round(model_latency_total, 2),
         tool_latency_ms=round(tool_latency_total, 2),
         outcome=outcome,
+        session_id=str(session.id),
     )
 
 

@@ -19,3 +19,7 @@ class PermissionEnum(str, Enum):
     # Policies
     POLICIES_READ = "policies.read"
     POLICIES_WRITE = "policies.write"
+    
+    # Checkout & Payments
+    CHECKOUT_READ = "checkout.read"
+    CHECKOUT_WRITE = "checkout.write"

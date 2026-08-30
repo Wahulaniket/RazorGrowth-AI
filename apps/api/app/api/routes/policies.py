@@ -17,7 +17,7 @@ from app.services.audit import AuditService
 
 router = APIRouter()
 
-@router.get("", response_model=List[PolicyResponse])
+@router.get("/policies", response_model=List[PolicyResponse])
 async def list_policies(
     tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_db),
@@ -28,7 +28,7 @@ async def list_policies(
     policies = await PolicyEngineService.get_policies(db, tenant_id)
     return policies
 
-@router.post("", response_model=PolicyResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/policies", response_model=PolicyResponse, status_code=status.HTTP_201_CREATED)
 async def create_policy(
     policy_in: PolicyCreate,
     tenant: Tenant = Depends(get_current_tenant),
@@ -52,7 +52,7 @@ async def create_policy(
     await db.commit()
     return policy
 
-@router.patch("/{policy_id}", response_model=PolicyResponse)
+@router.patch("/policies/{policy_id}", response_model=PolicyResponse)
 async def update_policy(
     policy_id: UUID,
     policy_update: PolicyUpdate,
@@ -62,13 +62,9 @@ async def update_policy(
     _: None = Depends(require_permission(PermissionEnum.POLICIES_WRITE)),
 ):
     tenant_id = tenant.id
-    policy = await db.get(Policy, policy_id)
+    policy = await PolicyEngineService.update_policy(db, tenant_id, policy_id, policy_update)
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
-
-    update_data = policy_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(policy, field, value)
 
     await AuditService.log_event(
         db=db,
@@ -77,13 +73,13 @@ async def update_policy(
         user_id=user.id,
         entity_id=policy.id,
         entity_type="POLICY",
-        details={"updated_fields": list(update_data.keys())}
+        details={"updated_fields": list(policy_update.model_dump(exclude_unset=True).keys())}
     )
 
     await db.commit()
     return policy
 
-@router.post("/internal/evaluate", response_model=PolicyDecision)
+@router.post("/internal/policy/evaluate", response_model=PolicyDecision)
 async def evaluate_policy(
     eval_req: PolicyEvaluationRequest,
     tenant: Tenant = Depends(get_current_tenant),
@@ -97,7 +93,7 @@ async def evaluate_policy(
     We require agent.use permission to simulate the agent evaluation process.
     """
     tenant_id = tenant.id
-    context = eval_req.model_dump()
+    context = eval_req.context
     
     decision = await PolicyEngineService.evaluate(db, tenant_id, eval_req.action, context)
     

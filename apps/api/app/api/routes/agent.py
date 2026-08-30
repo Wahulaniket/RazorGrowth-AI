@@ -77,6 +77,7 @@ async def agent_chat(
         registry=registry,
         user_id=current_user.id,
         request_id=request_id,
+        session_id_str=body.session_id,
     )
 
     # Map recommendations to the response schema
@@ -91,6 +92,7 @@ async def agent_chat(
         ))
 
     return AgentChatResponse(
+        session_id=result.session_id,
         message=result.message,
         recommendations=recommendations,
         constraints=result.constraints,
@@ -134,6 +136,7 @@ async def agent_chat_apikey(
         registry=registry,
         user_id=None,  # API key auth — no user
         request_id=request_id,
+        session_id_str=body.session_id,
     )
 
     recommendations = []
@@ -147,6 +150,7 @@ async def agent_chat_apikey(
         ))
 
     return AgentChatResponse(
+        session_id=result.session_id,
         message=result.message,
         recommendations=recommendations,
         constraints=result.constraints,

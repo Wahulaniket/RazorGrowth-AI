@@ -255,6 +255,7 @@ class CartService:
                 currency=currency
             )
             db.add(item)
+            cart.items.append(item)
         
         await db.flush()
         

@@ -59,6 +59,36 @@ async def get_current_user(
     return user
 
 
+async def get_optional_user(
+    db: AsyncSession = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> User | None:
+    """Extract and validate the current user from the JWT token, if present."""
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        return None
+
+    token = credentials.credentials
+    try:
+        payload = decode_access_token(token)
+    except JWTError:
+        return None
+
+    user_id_str: str | None = payload.get("sub")
+    if user_id_str is None:
+        return None
+
+    try:
+        user_id = UUID(user_id_str)
+    except ValueError:
+        return None
+
+    user = await UserRepository.get_by_id(db, user_id)
+    if user is None or user.status != "ACTIVE":
+        return None
+
+    return user
+
+
 async def get_current_tenant(
     current_user: User = Depends(get_current_user),
     x_tenant_id: str | None = Header(default=None, alias="X-Tenant-ID"),
@@ -95,6 +125,29 @@ async def get_current_tenant(
             return tenant
 
     raise TenantAccessDeniedError()
+
+async def get_tenant_by_id(
+    x_tenant_id: str | None = Header(default=None, alias="X-Tenant-ID"),
+    db: AsyncSession = Depends(get_db),
+) -> Tenant:
+    """Fetch tenant without checking user memberships (for anonymous endpoints)."""
+    if not x_tenant_id:
+        raise ForbiddenError(message="X-Tenant-ID header is required.")
+
+    try:
+        tenant_uuid = UUID(x_tenant_id)
+    except ValueError:
+        raise ForbiddenError(message="Invalid tenant ID format.")
+
+    from sqlalchemy import select
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_uuid))
+    tenant = result.scalar_one_or_none()
+    
+    if not tenant:
+        raise TenantAccessDeniedError(message="Tenant not found.")
+        
+    db.info["tenant_id"] = str(tenant.id)
+    return tenant
 
 
 from typing import Callable

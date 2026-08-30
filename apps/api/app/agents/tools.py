@@ -57,6 +57,7 @@ class ToolResult:
 
 class CatalogSearchInput(BaseModel):
     """Input schema for catalog.search."""
+    model_config = {"extra": "forbid"}
     query: str | None = Field(default=None, description="Natural language search term")
     category: str | None = Field(default=None, description="Category slug to filter by")
     min_price: float | None = Field(default=None, ge=0, description="Minimum price filter")
@@ -67,11 +68,13 @@ class CatalogSearchInput(BaseModel):
 
 class ProductIdInput(BaseModel):
     """Input schema for catalog.get_product and catalog.check_availability."""
+    model_config = {"extra": "forbid"}
     product_id: str = Field(description="UUID of the product")
 
 
 class VariantInput(BaseModel):
     """Input schema for catalog.get_variant."""
+    model_config = {"extra": "forbid"}
     product_id: str = Field(description="UUID of the product")
     variant_id: str = Field(description="UUID of the variant")
 
@@ -224,6 +227,7 @@ async def _handle_get_relationships(
 
 
 class CartItemInputSchema(BaseModel):
+    model_config = {"extra": "forbid"}
     product_id: str = Field(description="UUID of the product to add")
     variant_id: str | None = Field(default=None, description="UUID of the variant (if applicable)")
     quantity: int = Field(default=1, gt=0, description="Quantity to add")
@@ -231,22 +235,25 @@ class CartItemInputSchema(BaseModel):
 
 
 class CartItemUpdateSchema(BaseModel):
+    model_config = {"extra": "forbid"}
     item_id: str = Field(description="UUID of the cart item to update")
     quantity: int = Field(gt=0, description="New quantity")
     confirmation_token: str | None = Field(default=None, description="Token provided by the user for confirmation")
 
 
 class CartItemIdInputSchema(BaseModel):
+    model_config = {"extra": "forbid"}
     item_id: str = Field(description="UUID of the cart item")
     confirmation_token: str | None = Field(default=None, description="Token provided by the user for confirmation")
 
 
 class CartClearInputSchema(BaseModel):
+    model_config = {"extra": "forbid"}
     confirmation_token: str | None = Field(default=None, description="Token provided by the user for confirmation")
 
 
 class EmptyInputSchema(BaseModel):
-    pass
+    model_config = {"extra": "forbid"}
 
 
 # ---------------------------------------------------------------------------
@@ -274,18 +281,15 @@ async def _handle_cart_add_item(db: AsyncSession, tenant_id: UUID, user_id: UUID
             variant_id=UUID(validated.variant_id) if validated.variant_id else None,
             quantity=validated.quantity
         )
-        await CartService.add_item(db, tenant_id, user_id, item_create, validated.confirmation_token)
-        await db.commit()
+        async with db.begin_nested():
+            await CartService.add_item(db, tenant_id, user_id, item_create, validated.confirmation_token)
         return ToolResult(success=True, data={"status": "success"}, latency_ms=(time.monotonic() - start) * 1000)
     except CartConfirmationRequired as e:
         # Expected flow: returning confirmation requirement
-        await db.rollback()
         return ToolResult(success=True, data={"status": "confirmation_required", "details": e.confirmation.model_dump(mode="json")}, latency_ms=(time.monotonic() - start) * 1000)
     except (CartError, ValueError, PydanticValidationError) as e:
-        await db.rollback()
         return ToolResult(success=False, error=f"Invalid action: {e}", latency_ms=(time.monotonic() - start) * 1000)
     except Exception as e:
-        await db.rollback()
         logger.exception("cart.add_item failed")
         return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
 
@@ -295,17 +299,14 @@ async def _handle_cart_update_item(db: AsyncSession, tenant_id: UUID, user_id: U
     try:
         validated = CartItemUpdateSchema(**args)
         item_update = CartItemUpdate(quantity=validated.quantity)
-        await CartService.update_item(db, tenant_id, user_id, UUID(validated.item_id), item_update, validated.confirmation_token)
-        await db.commit()
+        async with db.begin_nested():
+            await CartService.update_item(db, tenant_id, user_id, UUID(validated.item_id), item_update, validated.confirmation_token)
         return ToolResult(success=True, data={"status": "success"}, latency_ms=(time.monotonic() - start) * 1000)
     except CartConfirmationRequired as e:
-        await db.rollback()
         return ToolResult(success=True, data={"status": "confirmation_required", "details": e.confirmation.model_dump(mode="json")}, latency_ms=(time.monotonic() - start) * 1000)
     except (CartError, ValueError, PydanticValidationError) as e:
-        await db.rollback()
         return ToolResult(success=False, error=f"Invalid action: {e}", latency_ms=(time.monotonic() - start) * 1000)
     except Exception as e:
-        await db.rollback()
         logger.exception("cart.update_item failed")
         return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
 
@@ -314,17 +315,14 @@ async def _handle_cart_remove_item(db: AsyncSession, tenant_id: UUID, user_id: U
     start = time.monotonic()
     try:
         validated = CartItemIdInputSchema(**args)
-        await CartService.remove_item(db, tenant_id, user_id, UUID(validated.item_id), validated.confirmation_token)
-        await db.commit()
+        async with db.begin_nested():
+            await CartService.remove_item(db, tenant_id, user_id, UUID(validated.item_id), validated.confirmation_token)
         return ToolResult(success=True, data={"status": "success"}, latency_ms=(time.monotonic() - start) * 1000)
     except CartConfirmationRequired as e:
-        await db.rollback()
         return ToolResult(success=True, data={"status": "confirmation_required", "details": e.confirmation.model_dump(mode="json")}, latency_ms=(time.monotonic() - start) * 1000)
     except (CartError, ValueError, PydanticValidationError) as e:
-        await db.rollback()
         return ToolResult(success=False, error=f"Invalid action: {e}", latency_ms=(time.monotonic() - start) * 1000)
     except Exception as e:
-        await db.rollback()
         logger.exception("cart.remove_item failed")
         return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
 
@@ -333,17 +331,14 @@ async def _handle_cart_clear(db: AsyncSession, tenant_id: UUID, user_id: UUID, a
     start = time.monotonic()
     try:
         validated = CartClearInputSchema(**args)
-        await CartService.clear_cart(db, tenant_id, user_id, validated.confirmation_token)
-        await db.commit()
+        async with db.begin_nested():
+            await CartService.clear_cart(db, tenant_id, user_id, validated.confirmation_token)
         return ToolResult(success=True, data={"status": "success"}, latency_ms=(time.monotonic() - start) * 1000)
     except CartConfirmationRequired as e:
-        await db.rollback()
         return ToolResult(success=True, data={"status": "confirmation_required", "details": e.confirmation.model_dump(mode="json")}, latency_ms=(time.monotonic() - start) * 1000)
     except (CartError, ValueError, PydanticValidationError) as e:
-        await db.rollback()
         return ToolResult(success=False, error=f"Invalid action: {e}", latency_ms=(time.monotonic() - start) * 1000)
     except Exception as e:
-        await db.rollback()
         logger.exception("cart.clear failed")
         return ToolResult(success=False, error=str(e), latency_ms=(time.monotonic() - start) * 1000)
 
