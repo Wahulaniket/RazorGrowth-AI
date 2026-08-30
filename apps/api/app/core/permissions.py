@@ -15,3 +15,7 @@ class PermissionEnum(str, Enum):
 
     # Agent
     AGENT_USE = "agent.use"
+    
+    # Policies
+    POLICIES_READ = "policies.read"
+    POLICIES_WRITE = "policies.write"

@@ -39,6 +39,8 @@ DEFAULT_ROLES = {
             PermissionEnum.TENANT_READ,
             PermissionEnum.TENANT_WRITE,
             PermissionEnum.AGENT_USE,
+            PermissionEnum.POLICIES_READ,
+            PermissionEnum.POLICIES_WRITE,
         ]
     },
     "Manager": {

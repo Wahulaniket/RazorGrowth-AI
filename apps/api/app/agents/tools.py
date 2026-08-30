@@ -88,6 +88,8 @@ class ToolDefinition:
     input_schema: dict[str, Any]  # JSON Schema
     input_model: type[BaseModel]  # Pydantic model for validation
     handler: Callable[..., Awaitable[ToolResult]]
+    requires_policy: bool = False
+    action_type: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -425,6 +427,17 @@ class ToolRegistry:
         except PydanticValidationError as e:
             return ToolResult(success=False, error=f"Invalid arguments: {e}")
 
+        # Policy Engine Evaluation
+        if tool.requires_policy:
+            from app.services.policy_engine import PolicyEngineService
+            action = tool.action_type or tool.name.upper().replace(".", "_")
+            decision = await PolicyEngineService.evaluate(db, tenant_id, action, arguments)
+            if decision.decision == "DENY":
+                return ToolResult(
+                    success=False, 
+                    error=f"Policy violation: {', '.join(decision.reasons)}",
+                )
+
         # Execute handler
         return await tool.handler(db, tenant_id, user_id, arguments)
 
@@ -555,6 +568,7 @@ def create_catalog_tool_registry() -> ToolRegistry:
         },
         input_model=CartItemInputSchema,
         handler=_handle_cart_add_item,
+        requires_policy=True,
     ))
 
     registry.register(ToolDefinition(
@@ -572,6 +586,7 @@ def create_catalog_tool_registry() -> ToolRegistry:
         },
         input_model=CartItemUpdateSchema,
         handler=_handle_cart_update_item,
+        requires_policy=True,
     ))
 
     registry.register(ToolDefinition(
@@ -588,6 +603,7 @@ def create_catalog_tool_registry() -> ToolRegistry:
         },
         input_model=CartItemIdInputSchema,
         handler=_handle_cart_remove_item,
+        requires_policy=True,
     ))
 
     registry.register(ToolDefinition(
@@ -603,6 +619,7 @@ def create_catalog_tool_registry() -> ToolRegistry:
         },
         input_model=CartClearInputSchema,
         handler=_handle_cart_clear,
+        requires_policy=True,
     ))
 
     registry.register(ToolDefinition(

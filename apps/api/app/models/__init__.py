@@ -11,6 +11,7 @@ from app.models.api_key import ApiKey
 from app.models.audit_log import AuditLog
 from app.models.cart import Cart
 from app.models.cart_item import CartItem
+from app.models.policy import Policy
 
 __all__ = [
     "Tenant",
@@ -28,4 +29,5 @@ __all__ = [
     "AuditLog",
     "Cart",
     "CartItem",
+    "Policy",
 ]

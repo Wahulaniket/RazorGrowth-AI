@@ -19,6 +19,7 @@ from app.api.routes.api_keys import router as api_keys_router
 from app.api.routes.catalog import router as catalog_router
 from app.api.routes.agent import router as agent_router
 from app.api.routes.cart import router as cart_router
+from app.api.routes.policies import router as policies_router
 from app.core.exceptions import RazorGrowthError
 from app.db.session import get_db
 from app.core.config import get_settings
@@ -79,6 +80,7 @@ api_router.include_router(api_keys_router)
 api_router.include_router(catalog_router)
 api_router.include_router(agent_router)
 api_router.include_router(cart_router, prefix="/cart")
+api_router.include_router(policies_router, prefix="/policies")
 
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(categories_router, prefix="/api/v1")
