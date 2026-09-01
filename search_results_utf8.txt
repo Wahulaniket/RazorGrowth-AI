@@ -1,0 +1,254 @@
+﻿./.env: DEBUG=true
+./.env: DATABASE_URL=postgresql+asyncpg://razorgrowth:razorgrowth_dev@localhost:5432/razorgrowth
+./.env: REDIS_URL=redis://localhost:6379/0
+./.env.example: DEBUG=true
+./.env.example: DATABASE_URL=postgresql+asyncpg://razorgrowth:razorgrowth_dev@localhost:5432/razorgrowth
+./.env.example: REDIS_URL=redis://localhost:6379/0
+./.env.example: JWT_SECRET_KEY=CHANGE_ME_generate_a_secure_random_key
+./check_db.py: res = await session.execute(text("SELECT rolname, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolcanlogin, rolreplication, rolbypassrls FROM pg_roles WHERE rolname = 'rg_app';"))
+./clean_db.py: "postgresql+asyncpg://rg_app:rg_app_dev@localhost:5432/razorgrowth"
+./README.md: curl http://localhost:8000/api/v1/health
+./README.md: - Swagger UI: http://localhost:8000/docs
+./README.md: - ReDoc: http://localhost:8000/redoc
+.\apps\api\app\agents/llm.py: Concrete implementations (OpenAI, Gemini, Fake, etc.) live behind it.
+.\apps\api\app\agents/llm.py: # Fake provider for deterministic testing
+.\apps\api\app\agents/llm.py: class FakeLLMProvider(LLMProvider):
+.\apps\api\app\agents/llm.py: model="fake",
+.\apps\api\app\agents/llm.py: if provider_name == "fake":
+.\apps\api\app\agents/llm.py: return FakeLLMProvider()
+.\apps\api\app\agents/orchestrator.py: pass
+.\apps\api\app\agents/orchestrator.py: pass
+.\apps\api\app\agents/orchestrator.py: pass
+.\apps\api\app\api/dependencies.py: Uses SECURITY DEFINER function to bypass RLS safely.
+.\apps\api\app\api/dependencies.py: from app.core.security import verify_password
+.\apps\api\app\api/dependencies.py: # 1. Bypass RLS using SECURITY DEFINER function
+.\apps\api\app\api/dependencies.py: if not verify_password(x_api_key, key_hash):
+.\apps\api\app\api\routes/agent.py: from app.agents.llm import FakeLLMProvider, LLMProvider, create_llm_provider
+.\apps\api\app\api\routes/categories.py: """List categories. Pass parent_id to list subcategories."""
+.\apps\api\app\api\routes/webhooks.py: # Check if we should allow test bypass for FakeProvider
+.\apps\api\app\api\routes/webhooks.py: if getattr(settings, "app_env", "development") != "production" and payload.get("test_bypass_signature") is True:
+.\apps\api\app\api\routes/webhooks.py: pass # allow for test
+.\apps\api\app\api\routes/webhooks.py: pass
+.\apps\api\app\core/config.py: backend_cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8080"]
+.\apps\api\app\core/config.py: llm_provider: str = "openai"  # "openai" | "fake"
+.\apps\api\app\core/config.py: payment_provider: str = "fake"  # "fake" | "razorpay"
+.\apps\api\app\core/config.py: if not self.razorpay_key_id or self.razorpay_key_id in ["", "CHANGE_ME", "test"]:
+.\apps\api\app\core/config.py: if not self.razorpay_key_secret or self.razorpay_key_secret in ["", "CHANGE_ME", "test"]:
+.\apps\api\app\core/config.py: if not self.razorpay_webhook_secret or self.razorpay_webhook_secret in ["", "CHANGE_ME", "test"]:
+.\apps\api\app\core/config.py: if self.jwt_secret_key in ["", "CHANGE_ME", "secret", "test-secret"]:
+.\apps\api\app\core/rate_limit.py: # Singleton initialization placeholder (populated in lifespan)
+.\apps\api\app\core/security.py: Handles JWT token creation/verification and password hashing.
+.\apps\api\app\core/security.py: from passlib.context import CryptContext
+.\apps\api\app\core/security.py: def hash_password(password: str) -> str:
+.\apps\api\app\core/security.py: """Hash a plaintext password using bcrypt."""
+.\apps\api\app\core/security.py: return pwd_context.hash(password)
+.\apps\api\app\core/security.py: def verify_password(plain_password: str, hashed_password: str) -> bool:
+.\apps\api\app\core/security.py: """Verify a plaintext password against a bcrypt hash."""
+.\apps\api\app\core/security.py: return pwd_context.verify(plain_password, hashed_password)
+.\apps\api\app\db/base.py: pass
+.\apps\api\app\models/user.py: password_hash: Mapped[str] = mapped_column(
+.\apps\api\app\repositories/user.py: password_hash: str,
+.\apps\api\app\repositories/user.py: password_hash=password_hash,
+.\apps\api\app\schemas/auth.py: password: str = Field(min_length=8, max_length=128)
+.\apps\api\app\schemas/auth.py: password: str = Field(min_length=1, max_length=128)
+.\apps\api\app\schemas/user.py: """Public user representation (never includes password_hash)."""
+.\apps\api\app\services/api_key.py: from app.core.security import hash_password
+.\apps\api\app\services/api_key.py: key_hash = hash_password(full_key)
+.\apps\api\app\services/auth.py: from app.core.security import create_access_token, hash_password, verify_password
+.\apps\api\app\services/auth.py: hashed = hash_password(data.password)
+.\apps\api\app\services/auth.py: password_hash=hashed,
+.\apps\api\app\services/auth.py: raise AuthenticationError(message="Invalid email or password.")
+.\apps\api\app\services/auth.py: if not verify_password(data.password, user.password_hash):
+.\apps\api\app\services/auth.py: raise AuthenticationError(message="Invalid email or password.")
+.\apps\api\app\services/cart_service.py: pass
+.\apps\api\app\services/payment_provider.py: pass
+.\apps\api\app\services/payment_provider.py: pass
+.\apps\api\app\services/payment_provider.py: class FakePaymentProvider(PaymentProvider):
+.\apps\api\app\services/payment_provider.py: # Mock behavior for local testing and CI
+.\apps\api\app\services/payment_provider.py: "id": f"order_fake_{uuid.uuid4().hex[:14]}",
+.\apps\api\app\services/payment_provider.py: # In fake mode, we might just accept it or implement a dummy verification
+.\apps\api\app\services/payment_provider.py: # Usually webhooks in fake mode bypass this if test_bypass_signature=True
+.\apps\api\app\services/payment_provider.py: return FakePaymentProvider()
+.\apps\api\app\services/policy_engine.py: pass
+.\apps\api\app\services/policy_engine.py: reasons = ["ALL_POLICIES_PASSED"]
+.\apps\web/README.md: Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+.\apps\web\src\app\admin/page.tsx: <p className="text-gray-500">Analytics chart placeholder.</p>
+.\apps\web\src\app\login/page.tsx: const [password, setPassword] = useState('');
+.\apps\web\src\app\login/page.tsx: // The API expects form data for OAuth2PasswordRequestForm in FastAPI
+.\apps\web\src\app\login/page.tsx: formData.append('password', password);
+.\apps\web\src\app\login/page.tsx: <CardDescription>Enter your email and password to login to your account</CardDescription>
+.\apps\web\src\app\login/page.tsx: placeholder="m@example.com"
+.\apps\web\src\app\login/page.tsx: <Label htmlFor="password">Password</Label>
+.\apps\web\src\app\login/page.tsx: id="password"
+.\apps\web\src\app\login/page.tsx: type="password"
+.\apps\web\src\app\login/page.tsx: value={password}
+.\apps\web\src\app\login/page.tsx: onChange={(e) => setPassword(e.target.value)}
+.\apps\web\src\app\login/page.tsx: placeholder="default"
+.\apps\web\src\app\register/page.tsx: const [password, setPassword] = useState('');
+.\apps\web\src\app\register/page.tsx: password,
+.\apps\web\src\app\register/page.tsx: placeholder="m@example.com"
+.\apps\web\src\app\register/page.tsx: <Label htmlFor="password">Password</Label>
+.\apps\web\src\app\register/page.tsx: id="password"
+.\apps\web\src\app\register/page.tsx: type="password"
+.\apps\web\src\app\register/page.tsx: value={password}
+.\apps\web\src\app\register/page.tsx: onChange={(e) => setPassword(e.target.value)}
+.\apps\web\src\components/ai-chat.tsx: placeholder="Type your message... e.g. 'I need a laptop for coding'"
+.\apps\web\src\components\ui/input.tsx: "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+.\apps\web\src\lib\api/apiClient.ts: const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+.\apps\web\src\lib\api/schema.d.ts: * @description List categories. Pass parent_id to list subcategories.
+.\apps\web\src\lib\api/schema.d.ts: /** Password */
+.\apps\web\src\lib\api/schema.d.ts: password: string;
+.\apps\web\src\lib\api/schema.d.ts: /** Password */
+.\apps\web\src\lib\api/schema.d.ts: password: string;
+.\apps\web\src\lib\api/schema.d.ts: * @description Public user representation (never includes password_hash).
+.\migrations\versions/48074ac27648_add_users_roles_permissions.py: sa.Column('password_hash', sa.String(length=255), nullable=False),
+.\migrations\versions/7ed1b7b32459_enforce_safe_rls_pattern.py: pass
+.\migrations\versions/f08457ecb633_add_rls_policies_and_security_definer.py: op.execute("DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'rg_app') THEN CREATE ROLE rg_app WITH LOGIN PASSWORD 'rg_app_dev'; END IF; END $$;")
+.\scripts/seed_catalog.py: database_url = os.environ.get("DATABASE_URL", "postgresql+asyncpg://razorgrowth:razorgrowth_dev@localhost:5432/razorgrowth")
+.\tests/conftest.py: os.environ["BACKEND_CORS_ORIGINS"] = '["http://localhost:3000"]'
+.\tests/conftest.py: os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+.\tests/conftest.py: os.environ["LLM_PROVIDER"] = "fake"
+.\tests/conftest.py: os.environ["LLM_MODEL"] = "fake-model"
+.\tests/conftest.py: from app.core.security import create_access_token, hash_password
+.\tests/conftest.py: "postgresql+asyncpg://rg_app:rg_app_dev@localhost:5432/razorgrowth"
+.\tests/conftest.py: password_hash=hash_password("password123"),
+.\tests\integration/test_adversarial.py: async def test_adversarial_rls_bypass_blocked(
+.\tests\integration/test_adversarial.py: # If the attacker passes X-Tenant-ID = alternative_tenant.id
+.\tests\integration/test_adversarial.py: # In conftest.py, we might have mocked Redis, or we're using a test Redis.
+.\tests\integration/test_adversarial.py: json={"email": "attacker@example.com", "password": "badpassword"}
+.\tests\integration/test_adversarial.py: res_fake_tool = await registry.execute("payment.mark_captured", {"amount": 1, "order_id": "123"}, db, tenant.id, uuid.uuid4())
+.\tests\integration/test_adversarial.py: assert not res_fake_tool.success
+.\tests\integration/test_adversarial.py: assert "Unknown tool" in res_fake_tool.error
+.\tests\integration/test_adversarial.py: # 2. Attempt to pass unauthorized arguments (e.g. amount) to a valid tool like cart.add_item
+.\tests\integration/test_agent.py: All tests use FakeLLMProvider ù no internet or API key required.
+.\tests\integration/test_agent.py: 22. Existing catalog tests remain passing (covered by other test files)
+.\tests\integration/test_agent.py: 23. Existing security tests remain passing (covered by other test files)
+.\tests\integration/test_agent.py: from app.agents.llm import FakeLLMProvider, LLMMessage, LLMResponse, ToolCall
+.\tests\integration/test_agent.py: from app.core.security import create_access_token, hash_password
+.\tests\integration/test_agent.py: """Helper to build a FakeLLMProvider final response."""
+.\tests\integration/test_agent.py: model="fake",
+.\tests\integration/test_agent.py: """Helper to build a FakeLLMProvider tool-call response."""
+.\tests\integration/test_agent.py: model="fake",
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry, user_id=test_user.id,
+.\tests\integration/test_agent.py: """Agent extracts category from query and passes it to catalog.search."""
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: assert fake_llm.calls[0]["tools"]  # tools were provided
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider(responses)
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: model="fake",
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm2 = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm2, registry=registry,
+.\tests\integration/test_agent.py: password_hash=hash_password("password123"),
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: assert "password" not in result_str.lower()
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: llm=fake_llm, registry=registry,
+.\tests\integration/test_agent.py: # Additional: Agent HTTP endpoint with FakeLLM (end-to-end)
+.\tests\integration/test_agent.py: """End-to-end test of POST /api/v1/agent/chat using FakeLLMProvider."""
+.\tests\integration/test_agent.py: # Monkeypatch the route's _get_llm_provider to return a FakeLLMProvider
+.\tests\integration/test_agent.py: fake_llm = FakeLLMProvider([
+.\tests\integration/test_agent.py: monkeypatch.setattr(agent_module, "_get_llm_provider", lambda: fake_llm)
+.\tests\integration/test_agent.py: def test_fake_llm_provider_creation():
+.\tests\integration/test_agent.py: """FakeLLMProvider can be created and returns scripted responses."""
+.\tests\integration/test_agent.py: provider = create_llm_provider(provider_name="fake")
+.\tests\integration/test_agent.py: assert isinstance(provider, FakeLLMProvider)
+.\tests\integration/test_agent_cart.py: class FakeCartLLMProvider(LLMProvider):
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: FakeCartLLMProvider.test_product_id = str(product_id)
+.\tests\integration/test_agent_cart.py: category_id=uuid.uuid4(),  # Might fail FK if category not there, let's assume we bypass or setup properly
+.\tests\integration/test_agent_cart.py: # Actually we should just mock get_current_price_and_inventory for unit testing the tool, or use proper fixtures.
+.\tests\integration/test_agent_cart.py: pass
+.\tests\integration/test_agent_cart.py: # Mock CartService to bypass DB
+.\tests\integration/test_agent_cart.py: async def mock_get_current_price(*args, **kwargs):
+.\tests\integration/test_agent_cart.py: monkeypatch.setattr(CartService, "get_current_price_and_inventory", mock_get_current_price)
+.\tests\integration/test_agent_cart.py: class MyFakeLLM(FakeCartLLMProvider):
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: llm = MyFakeLLM()
+.\tests\integration/test_agent_cart.py: async def mock_get_current_price(*args, **kwargs):
+.\tests\integration/test_agent_cart.py: monkeypatch.setattr(CartService, "get_current_price_and_inventory", mock_get_current_price)
+.\tests\integration/test_agent_cart.py: class MyFakeLLM2(FakeCartLLMProvider):
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: latency_ms=10.0, model="fake"
+.\tests\integration/test_agent_cart.py: llm = MyFakeLLM2()
+.\tests\integration/test_agent_policy.py: # LLM attempts to bypass or invoke directly
+.\tests\integration/test_ai_catalog_api.py: user_b = User(email="userb@example.com", name="User B", password_hash="hash")
+.\tests\integration/test_auth_api.py: "password": "strongpassword123",
+.\tests\integration/test_auth_api.py: assert "password_hash" not in data
+.\tests\integration/test_auth_api.py: password = "strongpassword123"
+.\tests\integration/test_auth_api.py: "password": password,
+.\tests\integration/test_auth_api.py: "password": password,
+.\tests\integration/test_auth_api.py: assert "password_hash" not in data
+.\tests\integration/test_payments.py: async def test_razorpay_webhook_signature_bypass(client: AsyncClient, db: AsyncSession, tenant: Tenant):
+.\tests\integration/test_payments.py: "test_bypass_signature": True,
+.\tests\integration/test_payments.py: # The webhook needs a signature, but we bypass validation if `test_bypass_signature` is true.
+.\tests\integration/test_payments.py: # However we still need to send SOME signature to pass the first check `if not signature`
+.\tests\integration/test_payments.py: "test_bypass_signature": True,
+.\tests\integration/test_payments.py: "test_bypass_signature": True,
+.\tests\integration/test_security.py: user_b = User(email="userb@example.com", name="User B", password_hash="hash")
+.\tests\integration/test_security.py: # 2. Add memberships (must set db.info tenant_id to bypass RLS since we are inserting into tenant_memberships which is RLS protected)
+.\tests\integration/test_security.py: # Actually we can just execute raw SQL to bypass if needed, or set context
+.\tests\integration/test_security.py: # Setup mock redis since ASGITransport doesn't trigger lifespan
+.\tests\integration/test_security.py: class MockRedisPipeline:
+.\tests\integration/test_security.py: def expire(self, key, time): pass
+.\tests\integration/test_security.py: class MockRedis:
+.\tests\integration/test_security.py: def pipeline(self): return MockRedisPipeline(self)
+.\tests\integration/test_security.py: rate_limit.redis_client = MockRedis()
+.\tests\integration/test_security.py: res = await client.post("/api/v1/auth/login", json={"email": "wrong@example.com", "password": "wrong"})
+.\tests\integration/test_security.py: res = await client.post("/api/v1/auth/login", json={"email": "wrong@example.com", "password": "wrong"})
+.\tests\unit/test_auth_service.py: from app.core.security import verify_password
+.\tests\unit/test_auth_service.py: password="securepassword123",
+.\tests\unit/test_auth_service.py: assert verify_password("securepassword123", user.password_hash)
+.\tests\unit/test_auth_service.py: password="password123",
+.\tests\unit/test_auth_service.py: password="securepassword123",
+.\tests\unit/test_auth_service.py: password="securepassword123",
+.\tests\unit/test_auth_service.py: async def test_login_invalid_password(db):
+.\tests\unit/test_auth_service.py: """Test 401 when password is incorrect."""
+.\tests\unit/test_auth_service.py: email = f"wrongpass-{uuid.uuid4().hex[:8]}@example.com"
+.\tests\unit/test_auth_service.py: name="Wrong Pass Test",
+.\tests\unit/test_auth_service.py: password="correctpassword",
+.\tests\unit/test_auth_service.py: password="wrongpassword",
+.\tests\unit/test_tenant_service.py: fake_id = str(uuid.uuid4())
+.\tests\unit/test_tenant_service.py: await TenantService.get(db, fake_id)
