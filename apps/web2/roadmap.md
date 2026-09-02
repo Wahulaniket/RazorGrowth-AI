@@ -1,0 +1,5 @@
+- [ ] Build Midnight Luxury customer shell and routes
+- [ ] Add mockable API/service layer and shared types
+- [ ] Build cart, checkout, orders, and auth demo flows
+- [ ] Build responsive admin command center routes
+- [ ] Validate navigation, build, and key interactions

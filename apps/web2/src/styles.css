@@ -1,0 +1,77 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@theme inline {
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --color-background: var(--rg-ink);
+  --color-foreground: var(--rg-cream);
+  --color-card: var(--rg-panel);
+  --color-card-foreground: var(--rg-cream);
+  --color-popover: var(--rg-panel);
+  --color-popover-foreground: var(--rg-cream);
+  --color-primary: var(--rg-gold);
+  --color-primary-foreground: var(--rg-ink);
+  --color-secondary: var(--rg-navy);
+  --color-secondary-foreground: var(--rg-cream);
+  --color-muted: var(--rg-navy);
+  --color-muted-foreground: var(--rg-cream-dim);
+  --color-accent: var(--rg-navy);
+  --color-accent-foreground: var(--rg-cream);
+  --color-destructive: var(--rg-error);
+  --color-destructive-foreground: var(--rg-cream);
+  --color-border: var(--rg-line);
+  --color-input: var(--rg-line);
+  --color-ring: var(--rg-gold);
+  --color-rg-ink: var(--rg-ink);
+  --color-rg-navy: var(--rg-navy);
+  --color-rg-panel: var(--rg-panel);
+  --color-rg-gold: var(--rg-gold);
+  --color-rg-gold-soft: var(--rg-gold-soft);
+  --color-rg-cream: var(--rg-cream);
+  --color-rg-cream-dim: var(--rg-cream-dim);
+  --color-rg-line: var(--rg-line);
+  --color-rg-success: var(--rg-success);
+  --color-rg-warning: var(--rg-warning);
+  --color-rg-error: var(--rg-error);
+  --color-rg-info: var(--rg-info);
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Jost", ui-sans-serif, sans-serif;
+}
+
+:root {
+  --rg-ink: oklch(0.13 0.025 260);
+  --rg-navy: oklch(0.17 0.035 258);
+  --rg-panel: oklch(0.21 0.04 258);
+  --rg-gold: oklch(0.69 0.12 82);
+  --rg-gold-soft: oklch(0.84 0.11 88);
+  --rg-cream: oklch(0.95 0.025 88);
+  --rg-cream-dim: oklch(0.72 0.025 310);
+  --rg-line: oklch(0.29 0.035 258);
+  --rg-success: oklch(0.74 0.13 150);
+  --rg-warning: oklch(0.8 0.14 82);
+  --rg-error: oklch(0.68 0.16 26);
+  --rg-info: oklch(0.72 0.12 230);
+  --radius: 0.75rem;
+}
+
+* { border-color: var(--rg-line); }
+html { background: var(--rg-ink); }
+body { margin: 0; background: var(--rg-ink); color: var(--rg-cream); font-family: var(--font-body); }
+button, a, input, select, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+::selection { background: var(--rg-gold); color: var(--rg-ink); }
+
+@keyframes rg-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.rg-rise { animation: rg-rise 500ms ease-out both; }
+.rg-rise-delay { animation-delay: 100ms; }
+.rg-rise-delay-2 { animation-delay: 180ms; }
+.rg-lift { transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease; }
+.rg-lift:hover { transform: translateY(-4px); border-color: color-mix(in oklab, var(--rg-gold) 50%, var(--rg-line)); }
+.rg-page { min-height: 100vh; background: var(--rg-ink); color: var(--rg-cream); }
+.rg-kicker { color: var(--rg-gold-soft); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.23em; text-transform: uppercase; }
+.rg-focus:focus-visible { outline: 2px solid var(--rg-gold); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; } }
