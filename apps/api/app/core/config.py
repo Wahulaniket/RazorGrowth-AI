@@ -15,7 +15,13 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
-    backend_cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8080"]
+    backend_cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8080",
+        "http://localhost:8081",
+
+    ]
 
     # LLM Provider
     llm_api_key: str = ""
@@ -50,4 +56,4 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     settings = Settings()
     settings.validate_production()
-    return settings
+    return settings

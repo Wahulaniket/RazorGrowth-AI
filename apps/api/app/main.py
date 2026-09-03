@@ -77,6 +77,10 @@ app.add_exception_handler(Exception, unhandled_error_handler)
 # --- Routers ---
 
 api_router = APIRouter()
+from app.api.routes.orders import router as orders_router
+from app.api.routes.webhooks import router as webhooks_router
+from app.api.routes.growth import router as growth_router
+
 api_router.include_router(auth_router)
 api_router.include_router(users_router)
 api_router.include_router(tenant_router)
@@ -86,6 +90,7 @@ api_router.include_router(agent_router)
 api_router.include_router(cart_router, prefix="/cart")
 api_router.include_router(policies_router)
 api_router.include_router(checkout_router, prefix="/checkout")
+api_router.include_router(orders_router)
 api_router.include_router(payments_router)
 api_router.include_router(webhooks_router)
 api_router.include_router(growth_router)
