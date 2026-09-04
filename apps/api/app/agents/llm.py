@@ -245,6 +245,8 @@ def create_llm_provider(
     if provider_name == "fake":
         return FakeLLMProvider()
     elif provider_name == "openai":
+        if not api_key:
+            raise ValueError("OpenAI API key is required. Set LLM_API_KEY in your environment.")
         return OpenAIProvider(api_key=api_key, model=model)
     else:
         raise ValueError(f"Unknown LLM provider: {provider_name}")

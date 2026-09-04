@@ -37,7 +37,7 @@ from decimal import Decimal
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.llm import FakeLLMProvider, LLMMessage, LLMResponse, ToolCall
@@ -68,16 +68,24 @@ async def agent_catalog(db: AsyncSession, test_tenant: Tenant, test_user: User):
     Creates products with various categories, prices, and inventory states.
     """
     # Create role with agent.use permission
-    role = Role(name="AgentUser")
-    db.add(role)
-    await db.flush()
+    role_res = await db.execute(select(Role).where(Role.name == "AgentUser"))
+    role = role_res.scalar_one_or_none()
+    if not role:
+        role = Role(name="AgentUser")
+        db.add(role)
+        await db.flush()
 
-    perm_agent = Permission(name="agent.use")
-    db.add(perm_agent)
-    await db.flush()
+    perm_res = await db.execute(select(Permission).where(Permission.name == "agent.use"))
+    perm_agent = perm_res.scalar_one_or_none()
+    if not perm_agent:
+        perm_agent = Permission(name="agent.use")
+        db.add(perm_agent)
+        await db.flush()
 
-    rp = RolePermission(role_id=role.id, permission_id=perm_agent.id)
-    db.add(rp)
+    rp_res = await db.execute(select(RolePermission).where(RolePermission.role_id == role.id, RolePermission.permission_id == perm_agent.id))
+    if not rp_res.scalar_one_or_none():
+        rp = RolePermission(role_id=role.id, permission_id=perm_agent.id)
+        db.add(rp)
 
     db.info["tenant_id"] = str(test_tenant.id)
 

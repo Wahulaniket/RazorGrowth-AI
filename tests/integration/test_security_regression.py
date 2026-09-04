@@ -13,20 +13,24 @@ from app.models.product import Product
 pytestmark = pytest.mark.asyncio
 
 async def setup_test_data(db: AsyncSession, test_user: User, test_tenant: Tenant):
-    viewer_role = Role(name="Viewer", description="Read-only")
-    db.add(viewer_role)
-    await db.flush()
+    viewer_role = await db.scalar(select(Role).where(Role.name == "Viewer"))
+    if not viewer_role:
+        viewer_role = Role(name="Viewer", description="Read-only")
+        db.add(viewer_role)
+        await db.flush()
     
-    perms = {
-        "catalog.read": Permission(name="catalog.read"),
-        "catalog.write": Permission(name="catalog.write"),
-        "agent.use": Permission(name="agent.use"),
-    }
-    for p in perms.values():
-        db.add(p)
-    await db.flush()
+    perms = {}
+    for p_name in ["catalog.read", "catalog.write", "agent.use"]:
+        p = await db.scalar(select(Permission).where(Permission.name == p_name))
+        if not p:
+            p = Permission(name=p_name)
+            db.add(p)
+            await db.flush()
+        perms[p_name] = p
     
-    db.add(RolePermission(role_id=viewer_role.id, permission_id=perms["catalog.read"].id))
+    rp = await db.scalar(select(RolePermission).where(RolePermission.role_id == viewer_role.id, RolePermission.permission_id == perms["catalog.read"].id))
+    if not rp:
+        db.add(RolePermission(role_id=viewer_role.id, permission_id=perms["catalog.read"].id))
     
     db.info["tenant_id"] = str(test_tenant.id)
     

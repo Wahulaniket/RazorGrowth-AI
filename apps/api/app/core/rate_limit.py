@@ -44,8 +44,14 @@ async def rate_limit_auth(ip: str):
     if not redis_client:
         return # Rate limiting disabled if redis is not connected
         
-    limiter = RateLimiter(redis_client, requests=5, window=60)
-    allowed = await limiter.check(f"auth:{ip}")
-    
-    if not allowed:
-        raise HTTPException(status_code=429, detail="Too many requests")
+    try:
+        limiter = RateLimiter(redis_client, requests=5, window=60)
+        allowed = await limiter.check(f"auth:{ip}")
+        
+        if not allowed:
+            raise HTTPException(status_code=429, detail="Too many requests")
+    except HTTPException:
+        raise
+    except Exception:
+        # Fallback gracefully if Redis is unavailable or times out
+        return

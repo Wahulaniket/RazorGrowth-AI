@@ -41,6 +41,8 @@ DEFAULT_ROLES = {
             PermissionEnum.AGENT_USE,
             PermissionEnum.POLICIES_READ,
             PermissionEnum.POLICIES_WRITE,
+            PermissionEnum.CHECKOUT_READ,
+            PermissionEnum.CHECKOUT_WRITE,
         ]
     },
     "Manager": {
@@ -50,6 +52,8 @@ DEFAULT_ROLES = {
             PermissionEnum.CATALOG_WRITE,
             PermissionEnum.TENANT_READ,
             PermissionEnum.AGENT_USE,
+            PermissionEnum.CHECKOUT_READ,
+            PermissionEnum.CHECKOUT_WRITE,
         ]
     },
     "Viewer": {
@@ -78,9 +82,14 @@ async def bootstrap_rbac(db: AsyncSession) -> None:
             logger.info(f"Creating permission: {perm_enum.value}")
             perm = Permission(name=perm_enum.value, description=f"Allows {perm_enum.value}")
             db.add(perm)
+            try:
+                async with db.begin_nested():
+                    await db.flush()
+            except Exception:
+                stmt = select(Permission).where(Permission.name == perm_enum.value)
+                result = await db.execute(stmt)
+                perm = result.scalar_one_or_none()
     
-    await db.flush()  # Flush so permissions have IDs
-
     # Reload all permissions into a mapping
     result = await db.execute(select(Permission))
     db_permissions = {p.name: p for p in result.scalars().all()}
@@ -96,7 +105,13 @@ async def bootstrap_rbac(db: AsyncSession) -> None:
             logger.info(f"Creating role: {role_name}")
             role = Role(name=role_name, description=role_def["description"])
             db.add(role)
-            await db.flush()
+            try:
+                async with db.begin_nested():
+                    await db.flush()
+            except Exception:
+                stmt = select(Role).where(Role.name == role_name)
+                result = await db.execute(stmt)
+                role = result.scalar_one_or_none()
         
         # 3. Map permissions to the role
         # First, fetch existing mappings to avoid integrity errors

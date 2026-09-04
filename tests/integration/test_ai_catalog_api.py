@@ -1,6 +1,7 @@
 import pytest
 from decimal import Decimal
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
 
@@ -19,9 +20,12 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture
 async def setup_catalog(db: AsyncSession, test_tenant: Tenant, test_user: User):
     # Create role and membership
-    role = Role(name="Admin")
-    db.add(role)
-    await db.flush()
+    role_res = await db.execute(select(Role).where(Role.name == "Admin"))
+    role = role_res.scalar_one_or_none()
+    if not role:
+        role = Role(name="Admin")
+        db.add(role)
+        await db.flush()
     
     db.info["tenant_id"] = str(test_tenant.id)
     

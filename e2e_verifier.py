@@ -7,7 +7,7 @@ async def run_customer_flow(page):
     
     # 1. Open frontend
     print("1. Open frontend...")
-    await page.goto("http://localhost:8081/")
+    await page.goto("http://127.0.0.1:3000/")
     await page.wait_for_selector("text=Browse catalog")
     print("[PASS] Open frontend")
 
@@ -32,7 +32,7 @@ async def run_customer_flow(page):
     print("[PASS] Registration and Login")
     
     # 5. Home
-    await page.goto("http://localhost:8081/")
+    await page.goto("http://127.0.0.1:3000/")
     print("[PASS] Open Home")
     
     # 6. Products

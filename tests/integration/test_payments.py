@@ -22,15 +22,19 @@ async def payment_auth_headers(db: AsyncSession, tenant: Tenant, test_user: User
         db.add(role)
         await db.flush()
         
-        perm_read = Permission(name="checkout.read")
-        perm_write = Permission(name="checkout.write")
-        db.add_all([perm_read, perm_write])
-        await db.flush()
-        
-        db.add_all([
-            RolePermission(role_id=role.id, permission_id=perm_read.id),
-            RolePermission(role_id=role.id, permission_id=perm_write.id)
-        ])
+        perms = {}
+        for p_name in ["checkout.read", "checkout.write"]:
+            p = await db.scalar(select(Permission).where(Permission.name == p_name))
+            if not p:
+                p = Permission(name=p_name)
+                db.add(p)
+                await db.flush()
+            perms[p_name] = p
+            
+        for p_obj in perms.values():
+            rp = await db.scalar(select(RolePermission).where(RolePermission.role_id == role.id, RolePermission.permission_id == p_obj.id))
+            if not rp:
+                db.add(RolePermission(role_id=role.id, permission_id=p_obj.id))
         await db.flush()
         
     mem = TenantMembership(user_id=test_user.id, tenant_id=tenant.id, role_id=role.id)

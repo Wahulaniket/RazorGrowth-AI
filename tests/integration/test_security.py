@@ -78,16 +78,24 @@ async def test_rls_tenant_isolation(client: AsyncClient, db: AsyncSession, test_
 async def test_api_key_lifecycle(client: AsyncClient, db: AsyncSession, test_user: User, test_tenant: Tenant):
     # Setup test role with API key permissions
     from app.models.role import Role, Permission, RolePermission
-    role = Role(name="Admin")
-    db.add(role)
-    await db.flush()
+    from sqlalchemy import select
     
-    perm = Permission(name="api_keys.write")
-    db.add(perm)
-    await db.flush()
+    role = await db.scalar(select(Role).where(Role.name == "Admin"))
+    if not role:
+        role = Role(name="Admin")
+        db.add(role)
+        await db.flush()
     
-    rp = RolePermission(role_id=role.id, permission_id=perm.id)
-    db.add(rp)
+    perm = await db.scalar(select(Permission).where(Permission.name == "api_keys.write"))
+    if not perm:
+        perm = Permission(name="api_keys.write")
+        db.add(perm)
+        await db.flush()
+    
+    rp = await db.scalar(select(RolePermission).where(RolePermission.role_id == role.id, RolePermission.permission_id == perm.id))
+    if not rp:
+        rp = RolePermission(role_id=role.id, permission_id=perm.id)
+        db.add(rp)
     
     # Must add db.info for RLS
     db.info["tenant_id"] = str(test_tenant.id)

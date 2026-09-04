@@ -24,7 +24,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         await api.post("/api/v1/auth/register", {
           email,
           password,
-          full_name: name,
+          name: name,
         });
         toast.success("Account created! Please sign in.");
         setMode(false);

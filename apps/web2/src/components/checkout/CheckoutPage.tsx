@@ -24,10 +24,12 @@ export function CheckoutPage() {
   });
 
   const quoteMutation = useMutation({
-    mutationFn: async () => api.post("/api/v1/checkout/quote", {
-      shipping_address: `${address.line}, ${address.city}, ${address.state} ${address.postal}`,
-      billing_address: `${address.line}, ${address.city}, ${address.state} ${address.postal}`
-    }),
+    mutationFn: async () => {
+      if (!cart?.id) throw new Error("No active cart found");
+      return api.post("/api/v1/checkout/quote", {
+        cart_id: cart.id
+      });
+    },
     onSuccess: (data) => {
       setQuoteId(data.id);
       setStep(4);
@@ -39,7 +41,9 @@ export function CheckoutPage() {
   });
 
   const confirmMutation = useMutation({
-    mutationFn: async () => api.post(`/api/v1/checkout/${quoteId}/confirm`, {}),
+    mutationFn: async () => api.post(`/api/v1/checkout/${quoteId}/confirm`, {
+      confirmation_type: "USER_CONFIRMATION"
+    }),
     onSuccess: (data) => {
       setOrderId(data.id);
       paymentMutation.mutate(data.id);
@@ -51,11 +55,7 @@ export function CheckoutPage() {
 
   const paymentMutation = useMutation({
     mutationFn: async (oId: string) => api.post("/api/v1/payments", {
-      order_id: oId,
-      amount: cart?.total || 0,
-      currency: "INR",
-      provider: "fake",
-      provider_payment_id: "fake_" + Math.random().toString(36).substring(7)
+      order_id: oId
     }),
     onSuccess: () => {
       setStep(5);
