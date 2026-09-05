@@ -52,9 +52,9 @@ export function OrderDetailPage({ id }: { id: string }) {
               <div className="mt-5 space-y-4">
                 {order.items?.map((item: any) => (
                   <div key={item.id} className="flex items-center gap-4">
-                    <img src={heroImage} alt={item.product?.name || "Product"} width={80} height={60} className="size-16 rounded-lg object-cover object-right" />
+                    <img src={heroImage} alt={item.product_name || "Product"} width={80} height={60} className="size-16 rounded-lg object-cover object-right" />
                     <div className="flex-1">
-                      <p className="font-display text-xl">{item.product?.name || "Product"}</p>
+                      <p className="font-display text-xl">{item.product_name || "Product"}</p>
                       <p className="text-xs text-rg-cream-dim">Default · Qty {item.quantity}</p>
                     </div>
                     <span>{money(item.unit_price * item.quantity)}</span>

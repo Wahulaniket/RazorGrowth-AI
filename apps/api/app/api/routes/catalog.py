@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_current_tenant
+from app.api.dependencies import get_tenant_by_id
 from app.db.session import get_db
 from app.models.tenant import Tenant
 from app.schemas.ai_catalog import (
@@ -35,7 +35,7 @@ router = APIRouter(
 )
 async def catalog_search(
     data: AICatalogSearchRequest,
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(get_tenant_by_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -58,7 +58,7 @@ async def catalog_search(
 )
 async def catalog_get_product(
     product_id: UUID,
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(get_tenant_by_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -75,7 +75,7 @@ async def catalog_get_product(
 async def catalog_get_variant(
     product_id: UUID,
     variant_id: UUID,
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(get_tenant_by_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -91,7 +91,7 @@ async def catalog_get_variant(
 )
 async def catalog_check_availability(
     product_id: UUID,
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(get_tenant_by_id),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -107,7 +107,7 @@ async def catalog_check_availability(
 )
 async def catalog_get_relationships(
     product_id: UUID,
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(get_tenant_by_id),
     db: AsyncSession = Depends(get_db),
 ):
     """

@@ -34,13 +34,18 @@ TEST_DATABASE_URL = os.getenv(
 engine = create_async_engine(TEST_DATABASE_URL, pool_pre_ping=True)
 TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def dispose_engine():
+    yield
+    await engine.dispose()
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
-    """Create an instance of the default event loop for the whole session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+
+# @pytest.fixture(scope="session")
+# def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
+#     """Create an instance of the default event loop for the whole session."""
+#     loop = asyncio.get_event_loop_policy().new_event_loop()
+#     yield loop
+#     loop.close()
 
 
 @pytest_asyncio.fixture(scope="function")

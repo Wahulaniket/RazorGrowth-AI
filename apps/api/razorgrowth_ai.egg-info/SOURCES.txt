@@ -24,6 +24,7 @@ apps/api/app/api/routes/catalog.py
 apps/api/app/api/routes/categories.py
 apps/api/app/api/routes/checkout.py
 apps/api/app/api/routes/growth.py
+apps/api/app/api/routes/orders.py
 apps/api/app/api/routes/payments.py
 apps/api/app/api/routes/policies.py
 apps/api/app/api/routes/products.py
@@ -92,6 +93,7 @@ apps/api/app/services/category.py
 apps/api/app/services/checkout_service.py
 apps/api/app/services/growth_service.py
 apps/api/app/services/inventory.py
+apps/api/app/services/order_service.py
 apps/api/app/services/payment_provider.py
 apps/api/app/services/payment_service.py
 apps/api/app/services/policy_engine.py

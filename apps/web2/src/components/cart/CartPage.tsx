@@ -76,7 +76,7 @@ export function CartPage() {
                       </Button>
                     </div>
                     <div className="mt-5 flex items-center justify-between">
-                      <span className="font-display text-xl">{money(item.unit_price)}</span>
+                      <span className="font-display text-xl">{money(item.unit_price_snapshot)}</span>
                       <div className="flex items-center rounded-lg border border-rg-line">
                         <Button variant="ghost" size="icon" aria-label="Decrease quantity" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}>
                           <Minus />

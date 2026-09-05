@@ -23,10 +23,14 @@ export function ProductDetailPage({ id }: { id: string }) {
 
   const addToCartMutation = useMutation({
     mutationFn: async () => {
-      return api.post("/api/v1/cart/items", {
+      const payload: any = {
         product_id: product.id,
         quantity,
-      });
+      };
+      if (variant) {
+        payload.variant_id = variant;
+      }
+      return api.post("/api/v1/cart/items", payload);
     },
     onSuccess: () => {
       toast.success(`${product.name} added to cart`);
